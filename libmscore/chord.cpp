@@ -380,7 +380,13 @@ qreal Chord::stemPosX() const
       const StaffType* st = stf ? stf->staffTypeForElement(this) : 0;
       if (st && st->isTabStaff())
             return st->chordStemPosX(this) * spatium();
-      return _up ? noteHeadWidth() : 0.0;
+
+      const Note* refNote = _up ? upNote() : downNote();
+      QPointF stemAttach = _up ? refNote->stemUpSE() : refNote->stemDownNW();
+      if (stemAttach.isNull())
+            return _up ? noteHeadWidth() : 0.0;
+      qreal noteWidthOffset = _up ? (refNote->headBodyWidth() - noteHeadWidth()) : 0.0;
+      return stemAttach.x() - noteWidthOffset;
       }
 
 //---------------------------------------------------------
@@ -1131,7 +1137,7 @@ bool Chord::readProperties(XmlReader& e)
             _arpeggio->read(e);
             _arpeggio->setParent(this);
             }
-      else if (tag == "Tremolo" || tag == "TremoloSingleChord") { // Mu4.4+ compatibility
+      else if (tag == "Tremolo" || tag == "TremoloSingleChord" || tag == "TremoloTwoChord") { // Mu4.4+ compatibility
             _tremolo = new Tremolo(score());
             _tremolo->setTrack(track());
             _tremolo->read(e);
@@ -2816,7 +2822,6 @@ QVariant Chord::getProperty(Pid propertyId) const
       {
       switch (propertyId) {
             case Pid::NO_STEM:        return noStem();
-            case Pid::SMALL:          return isSmall();
             case Pid::STEM_DIRECTION: return QVariant::fromValue<Direction>(stemDirection());
             default:
                   return ChordRest::getProperty(propertyId);
@@ -2831,7 +2836,6 @@ QVariant Chord::propertyDefault(Pid propertyId) const
       {
       switch (propertyId) {
             case Pid::NO_STEM:        return false;
-            case Pid::SMALL:          return false;
             case Pid::STEM_DIRECTION: return QVariant::fromValue<Direction>(Direction::AUTO);
             default:
                   return ChordRest::propertyDefault(propertyId);
@@ -2847,9 +2851,6 @@ bool Chord::setProperty(Pid propertyId, const QVariant& v)
       switch (propertyId) {
             case Pid::NO_STEM:
                   setNoStem(v.toBool());
-                  break;
-            case Pid::SMALL:
-                  setSmall(v.toBool());
                   break;
             case Pid::STEM_DIRECTION:
                   setStemDirection(v.value<Direction>());

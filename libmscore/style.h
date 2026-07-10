@@ -18,7 +18,7 @@
 
 namespace Ms {
 
-enum class Pid : int;
+enum class Pid : short;
 class XmlWriter;
 struct ChordDescription;
 class Element;
@@ -47,7 +47,7 @@ using Name = MSQE_##Name::Name;
 //---------------------------------------------------------
 
 BEGIN_QT_REGISTERED_ENUM(Sid)
-enum class Sid {
+enum class Sid : short {
       ///.\{
       NOSTYLE = -1,
 
@@ -1491,11 +1491,14 @@ class MStyle {
       //bool readProperties430(XmlReader& e, int mscVersion);
       bool readProperties440(XmlReader& e, int mscVersion);
       bool readProperties450(XmlReader& e, int mscVersion);
+      bool readProperties460(XmlReader& e, int mscVersion);
+      bool readProperties470(XmlReader& e, int mscVersion);
+      bool readProperties500(XmlReader& e, int mscVersion);
       bool readStyleValCompat(XmlReader&);
       bool readTextStyleValCompat(XmlReader&);
 
-      void resetAllStyles(Score* score, const QSet<Sid>& ignoredStyles = QSet<Sid>());
-      void resetStyles(Score* score, const QSet<Sid>& stylesToReset);
+      void resetAllStyles(Score* score, const QVector<Sid>& ignoredStyles = QVector<Sid>());
+      void resetStyles(Score* score, const QVector<Sid>& stylesToReset);
 
       static const char* valueType(const Sid);
       static const char* valueName(const Sid);
@@ -1530,8 +1533,8 @@ Tid textStyleFromName(const QString&);
 const std::vector<Tid>& allTextStyles();
 const std::vector<Tid>& primaryTextStyles();
 
-QSet<Sid> pageStyles();
-QSet<Sid> fretStyles();
+QVector<Sid> pageStyles();
+QVector<Sid> fretStyles();
 
 #ifndef NDEBUG
 extern void checkStyles();

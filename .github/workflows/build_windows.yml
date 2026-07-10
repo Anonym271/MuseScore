@@ -1,12 +1,12 @@
 name: 'Build: Windows'
 
 on:
-  schedule: # scheduled workflows will only run on the default branch. edit default values under gen1 below
-    - cron: '0 4 */1 * *' # At 04:00 on every day-of-month
-  push: # push.inputs field does not exist, use gen1 below
-    branches:
-    - 3.x
-  pull_request: # all branches. pull_request.inputs field does not exist, edit gen1 below
+  #schedule: # scheduled workflows will only run on the default branch. edit default values under gen1 below
+  #  - cron: '20 1 * * *' # At 01:20 on every day-of-month
+  #push: # push.inputs field does not exist, use gen1 below
+  #  branches:
+  #  - 3.x
+  #pull_request: # all branches. pull_request.inputs field does not exist, edit gen1 below
   workflow_dispatch: # triggered by github web ui run "build windows" workflow button
     inputs:
       platforms:
@@ -20,16 +20,16 @@ on:
         type: string
         required: true
       publish:
-        description: 'Publish to FTP: on - publish (obsolete)'
+        description: 'Publish to FTP when nightly generated (obsolete)'
         default: 'off'
         type: string
         required: false
-      execfrompubdevpush:
+      execfrom:
         description: 'workflow github.event_name workaround, leave as is'
         default: 'false'
         type: string
         required: true
-  workflow_call: # triggered by "uses" from other yml files. copy paste of workflow_dispatch for simplicity. "default" fields under non workflow_dispatch are ignored (unsure)
+  workflow_call: # triggered by "uses" from other yml files. copy paste of workflow_dispatch for simplicity. "default" fields ignored (unsure)
     inputs:
       platforms:
         description: 'Platforms to build:'
@@ -42,29 +42,25 @@ on:
         type: string
         required: true
       publish:
-        description: 'Publish to FTP: on - publish (obsolete)'
+        description: 'Publish to FTP when nightly generated (obsolete)'
         default: 'off'
         type: string
         required: false
-      execfrompubdevpush:
+      execfrom:
         description: 'workflow github.event_name workaround, leave as is'
         default: 'false'
         type: string
         required: true
 
-jobs:
-  debugbefore:
-    name: debug before (win yml)
-    runs-on: ubuntu-latest
-    steps:
-    - name: debug before # ${{ inputs.platforms }} empty on push
-      run: |
-        echo "github.event_name=${{github.event_name}}"
-        echo "inputs.platforms=${{ inputs.platforms }}"
-        echo "inputs.execfrompubdevpush=${{ inputs.execfrompubdevpush }}"
+concurrency:
+  # If run via workflow_call, ${{ github.workflow }} is the root workflow's name (e.g. 'Deploy'),
+  # which is the same for all workflows called in that run, hence we must add a unique suffix here.
+  group: ${{ github.workflow }} ${{ github.event_name }} ${{ github.ref }} windows
+  cancel-in-progress: true
 
+jobs:
   plan:
-    name: generate strings (win yml)
+    name: Setup (Windows yml)
     runs-on: ubuntu-latest
     outputs:
       platforms: ${{ steps.gen1.outputs.platforms }}
@@ -72,57 +68,55 @@ jobs:
       publish: ${{ steps.gen1.outputs.publish }}
     steps:
     - id: gen1
-      name: empty inputs on push workaround
+      name: Set or pass values
       run: |
-        if [[ "${{ inputs.execfrompubdevpush }}" == "true" ]]; then
+        if [[ "${{ inputs.execfrom }}" == "publishdev" ]]; then
 
           echo "triggered by on.push/pull_request/schedule of publishdev , on.workflow_call of build windows"
 
-          echo "platforms=${{ inputs.platforms }}" >> "$GITHUB_OUTPUT"
-          echo "build_mode=${{ inputs.build_mode }}" >> "$GITHUB_OUTPUT"
-          echo "publish=${{ inputs.publish }}" >> "$GITHUB_OUTPUT"
+          echo "platforms=${{ inputs.platforms }}" | tee -a "$GITHUB_OUTPUT"
+          echo "build_mode=${{ inputs.build_mode }}" | tee -a "$GITHUB_OUTPUT"
+          echo "publish=${{ inputs.publish }}" | tee -a "$GITHUB_OUTPUT"
+
+        elif [[ "${{ inputs.execfrom }}" == "buildall" ]]; then
+
+          echo "triggered by on.push/pull_request/schedule of buildall , on.workflow_call of build windows"
+
+          echo "platforms=${{ inputs.platforms }}" | tee -a "$GITHUB_OUTPUT"
+          echo "build_mode=${{ inputs.build_mode }}" | tee -a "$GITHUB_OUTPUT"
+          echo "publish=${{ inputs.publish }}" | tee -a "$GITHUB_OUTPUT"
 
         elif [[ "${{ github.event_name }}" == "pull_request" ]];  then
 
-          echo "triggered by 1. on.pull_request of build windows or 2. on.pull_request of workflows other than publishdev that triggers on.workflow_call of build windows"
+          echo "triggered by 1. on.pull_request of build windows or 2. on.pull_request of workflows other than publishdev and buildall that triggers on.workflow_call of build windows"
 
-          echo "platforms=windows_x64 windows_x32 windows_portable_x32 windows_portable_x64" >> "$GITHUB_OUTPUT"
-          echo "build_mode=devel" >> "$GITHUB_OUTPUT"
-          echo "publish=off" >> "$GITHUB_OUTPUT"
+          echo "platforms=windows_x64 windows_x32 windows_portable_x32 windows_portable_x64" | tee -a "$GITHUB_OUTPUT"
+          echo "build_mode=devel" | tee -a "$GITHUB_OUTPUT"  # copied from make_build_mode_env.sh
+          echo "publish=off" | tee -a "$GITHUB_OUTPUT"
 
         elif [[ "${{ github.event_name }}" == "schedule" ]];  then
 
-          echo "triggered by 1. on.schedule of build windows or 2. on.schedule of workflows other than publishdev that triggers on.workflow_call of build windows"
+          echo "triggered by 1. on.schedule of build windows or 2. on.schedule of workflows other than publishdev and buildall that triggers on.workflow_call of build windows"
 
-          echo "platforms=windows_x64 windows_x32 windows_portable_x32 windows_portable_x64" >> "$GITHUB_OUTPUT"
-          echo "build_mode=devel" >> "$GITHUB_OUTPUT"
-          echo "publish=off" >> "$GITHUB_OUTPUT"
+          echo "platforms=windows_x64 windows_x32 windows_portable_x32 windows_portable_x64" | tee -a "$GITHUB_OUTPUT"
+          echo "build_mode=nightly" | tee -a "$GITHUB_OUTPUT"  # copied from make_build_mode_env.sh
+          echo "publish=off" | tee -a "$GITHUB_OUTPUT"
 
         elif [[ "${{ github.event_name }}" == "push" ]]; then
 
-          echo "triggered by 1. on.push of build windows or 2. on.push of workflows other than publishdev that triggers on.workflow_call of build windows"
+          echo "triggered by 1. on.push of build windows or 2. on.push of workflows other than publishdev and buildall that triggers on.workflow_call of build windows"
 
-          echo "platforms=windows_x64 windows_x32 windows_portable_x32 windows_portable_x64" >> "$GITHUB_OUTPUT"
-          echo "build_mode=devel" >> "$GITHUB_OUTPUT"
-          echo "publish=off" >> "$GITHUB_OUTPUT"
+          echo "platforms=windows_x64 windows_x32 windows_portable_x32 windows_portable_x64" | tee -a "$GITHUB_OUTPUT"
+          echo "build_mode=devel" | tee -a "$GITHUB_OUTPUT"  # copied from make_build_mode_env.sh
+          echo "publish=off" | tee -a "$GITHUB_OUTPUT"
 
         else
 
-          echo "platforms=${{ inputs.platforms }}" >> "$GITHUB_OUTPUT"
-          echo "build_mode=${{ inputs.build_mode }}" >> "$GITHUB_OUTPUT"
-          echo "publish=${{ inputs.publish }}" >> "$GITHUB_OUTPUT"
+          echo "platforms=${{ inputs.platforms }}" | tee -a "$GITHUB_OUTPUT"
+          echo "build_mode=${{ inputs.build_mode }}" | tee -a "$GITHUB_OUTPUT"
+          echo "publish=${{ inputs.publish }}" | tee -a "$GITHUB_OUTPUT"
 
         fi
-
-  debugafter:
-    name: debug after (win yml)
-    needs:
-      - plan
-    runs-on: ubuntu-latest
-    steps:
-    - name: debug after # confirm use "needs.plan.outputs." in replace of "inputs."
-      run: |
-        echo "needs.plan.outputs.platforms=${{ needs.plan.outputs.platforms }}"
 
   windows_x64:
     if: contains(needs.plan.outputs.platforms, 'windows_x64')
@@ -130,12 +124,8 @@ jobs:
       - plan
     runs-on: windows-2022
     steps:
-    - name: Cancel Previous Runs
-      uses: styfle/cancel-workflow-action@0.12.1
-      with:
-        access_token: ${{ github.token }}
     - name: Clone repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: 'true'
     - name: Configure workflow
@@ -150,7 +140,7 @@ jobs:
         BUILD_NUMBER=$(cat ./build.artifacts/env/build_number.env)
 
         DO_PUBLISH='false'
-        if [[ "${{ needs.plan.outputs.publish }}" == "on" || ("${{ github.event_name }}" == "schedule" && "$BUILD_MODE" == "nightly") ]]; then
+        if [[ "${{ needs.plan.outputs.publish }}" == "on" && "$BUILD_MODE" == "nightly" ]]; then
           DO_PUBLISH='true'
           if [ -z "${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }}" ]; then
             echo "::warning::OSUOSL_SSH_ENCRYPT_SECRET is empty; not publishing to OSUOSL"
@@ -201,7 +191,7 @@ jobs:
         bash ./build/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os windows -v 3
     - name: Upload artifacts on GitHub
       if: ${{ always() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.UPLOAD_ARTIFACT_NAME }}
         path: build.artifacts\
@@ -212,12 +202,8 @@ jobs:
       - plan
     runs-on: windows-2022
     steps:
-    - name: Cancel Previous Runs
-      uses: styfle/cancel-workflow-action@0.12.1
-      with:
-        access_token: ${{ github.token }}
     - name: Clone repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: 'true'
     - name: Configure workflow
@@ -232,7 +218,7 @@ jobs:
         BUILD_NUMBER=$(cat ./build.artifacts/env/build_number.env)
 
         DO_PUBLISH='false'
-        if [[ "${{ needs.plan.outputs.publish }}" == "on" || ("${{ github.event_name }}" == "schedule" && "$BUILD_MODE" == "nightly") ]]; then
+        if [[ "${{ needs.plan.outputs.publish }}" == "on" && "$BUILD_MODE" == "nightly" ]]; then
           DO_PUBLISH='true'
           if [ -z "${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }}" ]; then
             echo "::warning::OSUOSL_SSH_ENCRYPT_SECRET is empty; not publishing to OSUOSL"
@@ -283,7 +269,7 @@ jobs:
         bash ./build/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os windows -v 3
     - name: Upload artifacts on GitHub
       if: ${{ always() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.UPLOAD_ARTIFACT_NAME }}
         path: build.artifacts\
@@ -294,12 +280,8 @@ jobs:
       - plan
     runs-on: windows-2022
     steps:
-    - name: Cancel Previous Runs
-      uses: styfle/cancel-workflow-action@0.12.1
-      with:
-        access_token: ${{ github.token }}
     - name: Clone repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: 'true'
     - name: Configure workflow
@@ -314,7 +296,7 @@ jobs:
         BUILD_NUMBER=$(cat ./build.artifacts/env/build_number.env)
 
         DO_PUBLISH='false'
-        if [[ "${{ needs.plan.outputs.publish }}" == "on" || ("${{ github.event_name }}" == "schedule" && "$BUILD_MODE" == "nightly") ]]; then
+        if [[ "${{ needs.plan.outputs.publish }}" == "on" && "$BUILD_MODE" == "nightly" ]]; then
           DO_PUBLISH='true'
           if [ -z "${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }}" ]; then
             echo "::warning::OSUOSL_SSH_ENCRYPT_SECRET is empty; not publishing to OSUOSL"
@@ -364,7 +346,7 @@ jobs:
         bash ./build/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os windows -v 3
     - name: Upload artifacts on GitHub
       if: ${{ always() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.UPLOAD_ARTIFACT_NAME }}
         path: build.artifacts\
@@ -375,12 +357,8 @@ jobs:
       - plan
     runs-on: windows-2022
     steps:
-    - name: Cancel Previous Runs
-      uses: styfle/cancel-workflow-action@0.12.1
-      with:
-        access_token: ${{ github.token }}
     - name: Clone repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: 'true'
     - name: Configure workflow
@@ -395,7 +373,7 @@ jobs:
         BUILD_NUMBER=$(cat ./build.artifacts/env/build_number.env)
 
         DO_PUBLISH='false'
-        if [[ "${{ needs.plan.outputs.publish }}" == "on" || ("${{ github.event_name }}" == "schedule" && "$BUILD_MODE" == "nightly") ]]; then
+        if [[ "${{ needs.plan.outputs.publish }}" == "on" && "$BUILD_MODE" == "nightly" ]]; then
           DO_PUBLISH='true'
           if [ -z "${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }}" ]; then
             echo "::warning::OSUOSL_SSH_ENCRYPT_SECRET is empty; not publishing to OSUOSL"
@@ -445,7 +423,7 @@ jobs:
         bash ./build/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os windows -v 3
     - name: Upload artifacts on GitHub
       if: ${{ always() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.UPLOAD_ARTIFACT_NAME }}
         path: build.artifacts\

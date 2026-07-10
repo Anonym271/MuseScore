@@ -158,23 +158,20 @@ AboutBoxDialog::AboutBoxDialog()
       revisionLabel->setText(tr("Revision: %1").arg(revision));
       setWindowFlags(this->windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
-      auto compilerDateISO = []() -> std::string {
-            // Store __DATE__ in ISO 8601 format ( e.g. 2025-04-20 )
-            int month, day, year;
-            char buffer[10];
-            static const char monthNames[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
-            sscanf(__DATE__, "%s %d %d", buffer, &day, &year);
-            month = ((strstr(monthNames, buffer) - monthNames) / 3) + 1;
-            sprintf(buffer, "%d-%02d-%02d", year, month, day);
-            return std::string(buffer);
+      auto compilerDateISO = []() -> QString {
+            // Attempt to convert __DATE__ into ISO 8601 format (YYYY-MM-DD)
+            QDate date = QDate::fromString(__DATE__, "MMM dd yyyy");
+            if (!date.isValid())
+                  date = QDate::fromString(__DATE__, "MMM  d yyyy");
+            return date.isValid() ? date.toString(Qt::ISODate) : __DATE__;
             };
 
-      std::string dateTime;
+      QString dateTime;
       dateTime += preferences.getBool(PREF_UI_APP_BUILD_DATE_ISO) ? compilerDateISO() : __DATE__;
       dateTime += " ";
       dateTime += __TIME__;
 
-      buildDateLabel->setText(tr("Build date: %1").arg(dateTime.c_str()));
+      buildDateLabel->setText(tr("Build date: %1").arg(dateTime));
 
       QString visitAndDonateString;
 #if !defined(FOR_WINSTORE) && 0
@@ -184,7 +181,7 @@ AboutBoxDialog::AboutBoxDialog()
                        "<a href=\"https://www.musescore.org/contribute\">", "</a>");
       visitAndDonateString += "\n\n";
 #endif
-      QString finalString = visitAndDonateString + tr("Copyright &copy; 1999-2025 MuseScore BVBA and others.\nPublished under the %1GNU General Public License version 2%2.")
+      QString finalString = visitAndDonateString + tr("Copyright &copy; 1999-2026 MuseScore Limited and others.\nPublished under the %1GNU General Public License version 2%2.")
                   .arg("<a href=\"https://www.gnu.org/licenses/old-licenses/gpl-2.0.html\">", "</a>");
       finalString.replace("\n", "<br/>");
       copyrightLabel->setText(QString("<span style=\"font-size:10pt;\">%1</span>").arg(finalString));

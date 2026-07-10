@@ -277,7 +277,7 @@ Score::Score(MasterScore* parent, bool forcePartStyle /* = true */)
             _style = parent->style();
 
             // but borrow defaultStyle page layout settings
-            for (auto i : pageStyles())
+            for (auto& i : pageStyles())
                   _style.set(i, MScore::defaultStyle().value(i));
             // and force some style settings that just make sense for parts
             if (forcePartStyle) {
@@ -1873,12 +1873,12 @@ void Score::scanElementsInRange(void* data, void (*func)(void*, Element*), bool 
                         mmr->scanElements(data, func, all);
                   }
             }
-      for (Element* e : _selection.elements()) {
-            if (e->isSpanner()) {
-                  Spanner* spanner = toSpanner(e);
-                  for (SpannerSegment* ss : spanner->spannerSegments()) {
-                        ss->scanElements(data, func, all);
-                        }
+      for (const Element* e : _selection.elements()) {
+            if (!e->isSpannerSegment())
+                  continue;
+            Spanner* spanner = toSpannerSegment(e)->spanner();
+            for (SpannerSegment* ss : spanner->spannerSegments()) {
+                  ss->scanElements(data, func, all);
                   }
             }
       }
@@ -3387,6 +3387,10 @@ void Score::select(Element* e, SelectType type, int staffIdx)
             case SelectType::SINGLE:
                   selectSingle(e, staffIdx);
                   break;
+            case SelectType::COMPARISON:
+                  selectSingle(e, staffIdx);
+                  _selection.setState(SelState::COMPARISON);
+                  break;
             case SelectType::ADD:
                   selectAdd(e);
                   break;
@@ -3762,6 +3766,10 @@ void Score::selectSimilar(Element* e, bool sameStaff)
             else
                   pattern.subtype = e->subtype();
             }
+      else if (e->isHairpinSegment() || type == ElementType::HARMONY) {
+            pattern.subtype = e->subtype();
+            pattern.subtypeValid = true;
+            }
       pattern.staffStart = sameStaff ? e->staffIdx() : -1;
       pattern.staffEnd = sameStaff ? e->staffIdx() + 1 : -1;
       pattern.voice = -1;
@@ -3791,6 +3799,10 @@ void Score::selectSimilarInRange(Element* e)
                   pattern.subtype = -1; //hack
             else
                   pattern.subtype = e->subtype();
+            pattern.subtypeValid = true;
+            }
+      else if (e->isHairpinSegment() || type == ElementType::HARMONY) {
+            pattern.subtype = e->subtype();
             pattern.subtypeValid = true;
             }
       pattern.staffStart = selection().staffStart();
@@ -5019,37 +5031,62 @@ void Score::changeVoice(int voice)
                               // rests or gap in destination
                               //   insert new chord if the rests / gap are long enough
                               //   then move note in
-                              ChordRest* pcr = nullptr;
-                              ChordRest* ncr = nullptr;
+                              bool hasIncompatibleTuplet = false;
+                              Chord* cBefore = nullptr;
+                              Chord* cAfterStart = nullptr;
                               for (Segment* s2 = m->first(SegmentType::ChordRest); s2; s2 = s2->next()) {
                                     if (s2->segmentType() != SegmentType::ChordRest)
                                           continue;
                                     ChordRest* cr2 = toChordRest(s2->element(dstTrack));
-                                    if (!cr2 || cr2->type() == ElementType::REST)
+                                    if (!cr2)
                                           continue;
-                                    if (s2->tick() < s->tick()) {
-                                          pcr = cr2;
+                                    if (Tuplet* topTuplet = cr2->topTuplet()) {
+                                          if (topTuplet->tick() < s->tick()
+                                              && topTuplet->tick() + topTuplet->actualTicks() > s->tick()) {
+                                                hasIncompatibleTuplet = true;
+                                                break;
+                                                }
+                                          if (topTuplet->tick() < s->tick() + chord->actualTicks()
+                                              && topTuplet->tick() + topTuplet->actualTicks() > s->tick() + chord->actualTicks()) {
+                                                hasIncompatibleTuplet = true;
+                                                break;
+                                                }
+                                          }
+                                    if (!cr2->isChord()) {
                                           continue;
                                           }
-                                    else if (s2->tick() >= s->tick()) {
-                                          ncr = cr2;
+                                    if (s2->tick() < s->tick()) {
+                                          cBefore = toChord(cr2);
+                                          }
+                                    if (s2->tick() >= s->tick()) {
+                                          cAfterStart = toChord(cr2);
+                                          }
+                                    if (s2->tick() >= s->tick() + chord->actualTicks()) {
                                           break;
                                           }
                                     }
-                              Fraction gapStart = pcr ? pcr->tick() + pcr->actualTicks() : m->tick();
-                              Fraction gapEnd   = ncr ? ncr->tick() : m->tick() + m->ticks();
-                              if (gapStart <= s->tick() && gapEnd >= s->tick() + chord->actualTicks()) {
-                                    // big enough gap found
-                                    dstChord = new Chord(this);
-                                    dstChord->setTrack(dstTrack);
-                                    dstChord->setDurationType(chord->durationType());
-                                    dstChord->setTicks(chord->ticks());
-                                    dstChord->setParent(s);
-                                    // makeGapVoice will not back-fill an empty voice
-                                    if (voice && !dstCR)
-                                          expandVoice(s, /*m->first(SegmentType::ChordRest,*/ dstTrack);
-                                    makeGapVoice(s, dstTrack, chord->actualTicks(), s->tick());
+                              if (hasIncompatibleTuplet) {
+                                    continue;
                                     }
+                              if (cBefore && cBefore->tick() + cBefore->actualTicks() > s->tick()) {
+                                    // previous chord overlaps
+                                    continue;
+                                    }
+                              if (cAfterStart && cAfterStart->tick() < s->tick() + chord->actualTicks()) {
+                                    // next chord overlaps
+                                    continue;
+                                    }
+                              // big enough gap found
+                              dstChord = new Chord(this);
+                              dstChord->setTrack(dstTrack);
+                              dstChord->setDurationType(chord->durationType());
+                              dstChord->setTicks(chord->ticks());
+                              dstChord->setParent(s);
+                              // makeGapVoice will not back-fill an empty voice
+                              if (voice && !dstCR) {
+                                    expandVoice(s, /*m->first(SegmentType::ChordRest,*/ dstTrack);
+                                    }
+                              makeGapVoice(s, dstTrack, chord->ticks(), s->tick());
                               }
 
                         // move note to destination chord

@@ -22,8 +22,6 @@
 
 #include "ui_editstyle.h"
 #include "abstractdialog.h"
-#include "globals.h"
-#include "libmscore/mscore.h"
 #include "libmscore/style.h"
 
 class QScrollArea;

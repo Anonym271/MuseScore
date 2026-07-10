@@ -178,8 +178,10 @@
         <file>data/icons/timesig_prolatio03.svg</file>
         <file>data/icons/timesig_prolatio04.svg</file>
         <file>data/icons/timesig_prolatio05.svg</file>
+        <file>data/icons/timesig_prolatio06.svg</file>
         <file>data/icons/timesig_prolatio07.svg</file>
         <file>data/icons/timesig_prolatio08.svg</file>
+        <file>data/icons/timesig_prolatio09.svg</file>
         <file>data/icons/timesig_prolatio10.svg</file>
         <file>data/icons/timesig_prolatio11.svg</file>
         <file>data/icons/dialog-error.svg</file>
@@ -220,5 +222,6 @@
         <file>data/icons/png/dockwidget-float@2x.png</file>
         <file>data/icons/mouse-entry.svg</file>
         <file>data/icons/edit-playback.svg</file>
+        <file>data/icons/document-reload.svg</file>
     </qresource>
 </RCC>

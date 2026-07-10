@@ -93,16 +93,18 @@ void Preferences::init(bool storeInMemoryOnly)
       checkUpdateStartup = false;
 #endif
 
+#if defined(Q_OS_MAC) || defined(Q_OS_WIN) || defined(USE_PORTAUDIO)
       bool defaultUsePortAudio = false;
+#endif
       bool defaultUsePulseAudio = false;
       bool defaultUseJackAudio = false;
       bool defaultUseAlsaAudio = false;
 
 #if defined(Q_OS_MAC) || defined(Q_OS_WIN)
-      defaultUsePortAudio  = true;
+      defaultUsePortAudio = true;
       // Linux
 #elif defined(USE_PULSEAUDIO)
-      defaultUsePulseAudio  = true;
+      defaultUsePulseAudio = true;
 #elif defined(USE_ALSA)
       defaultUseAlsaAudio = true;
 #elif defined(USE_PORTAUDIO)
@@ -273,6 +275,8 @@ void Preferences::init(bool storeInMemoryOnly)
             {PREF_UI_SCORE_VOICE3_COLOR,                           new ColorPreference(QColor(0xC53F00))},
             {PREF_UI_SCORE_VOICE4_COLOR,                           new ColorPreference(QColor(0xC31989))},
             {PREF_UI_SCORE_CURSOR_COLOR,                           new ColorPreference(QColor(0x0065BF))},
+            {PREF_SCORE_COMPARISON_SELECTION_COLOR,                new ColorPreference(QColor(Qt::green))},
+            {PREF_SCORE_COMPARISON_SELECTION_COLOR_ENABLED,        new BoolPreference(false)},
             {PREF_UI_THEME_ICONWIDTH,                              new IntPreference(28, false)},
             {PREF_UI_THEME_ICONHEIGHT,                             new IntPreference(24, false)},
             {PREF_UI_THEME_FONTFAMILY,                             new StringPreference(QApplication::font().family(), false) },

@@ -475,13 +475,14 @@ static void collectNote(EventMap* events, int channel, const Note* note, qreal v
 
             double noteLen = note->playTicks();
             int lastPointTick = tick1;
+            int lastPitch = INT_MAX;
             for (int pitchIndex = 0; pitchIndex < pitchSize-1; pitchIndex++) {
                   PitchValue pitchValue = points[pitchIndex];
                   PitchValue nextPitch  = points[pitchIndex+1];
                   int nextPointTick = tick1 + nextPitch.time / 60.0 * noteLen;
                   int pitch = pitchValue.pitch;
 
-                  if (pitchIndex == 0 && (pitch == nextPitch.pitch)) {
+                  if (pitchIndex == 0 && (pitch == nextPitch.pitch) && (pitch != lastPitch)) {
                         int midiPitch = (pitch * 16384) / 1200 + 8192;
                         int msb = midiPitch / 128;
                         int lsb = midiPitch % 128;
@@ -489,6 +490,7 @@ static void collectNote(EventMap* events, int channel, const Note* note, qreal v
                         ev.setOriginatingStaff(staffIdx);
                         events->insert(std::pair<int, NPlayEvent>(lastPointTick, ev));
                         lastPointTick = nextPointTick;
+                        lastPitch = pitch;
                         continue;
                         }
                   if (pitch == nextPitch.pitch && !(pitchIndex == 0 && pitch != 0)) {
@@ -504,18 +506,26 @@ static void collectNote(EventMap* events, int channel, const Note* note, qreal v
                           /  .                   midi pitch is 12/16384 semitones
                          A....
                        tickDelta   */
-                  for (int i = lastPointTick; i <= nextPointTick; i += 16) {
+                  // We need to be careful to add the final event at nextPointTick exactly -- even if
+                  // it's not on a multiple of 16 -- or else the bend might be left slightly unfinished
+                  for (int i = lastPointTick; i <= nextPointTick + 15; i += 16) {
+                        if (i > nextPointTick)
+                              i = nextPointTick;
+
                         double dx = ((i-lastPointTick) * 60) / noteLen;
                         int p = pitch + dx * pitchDelta / tickDelta;
 
-                        // We don't support negative pitch, but Midi does. Let's center by adding 8192.
-                        int midiPitch = (p * 16384) / 1200 + 8192;
-                        // Representing pitch as two bytes
-                        int msb = midiPitch / 128;
-                        int lsb = midiPitch % 128;
-                        NPlayEvent ev(ME_PITCHBEND, channel, lsb, msb);
-                        ev.setOriginatingStaff(staffIdx);
-                        events->insert(std::pair<int, NPlayEvent>(i, ev));
+                        if (p != lastPitch) {
+                              // We don't support negative pitch, but Midi does. Let's center by adding 8192.
+                              int midiPitch = (p * 16384) / 1200 + 8192;
+                              // Representing pitch as two bytes
+                              int msb = midiPitch / 128;
+                              int lsb = midiPitch % 128;
+                              NPlayEvent ev(ME_PITCHBEND, channel, lsb, msb);
+                              ev.setOriginatingStaff(staffIdx);
+                              events->insert(std::pair<int, NPlayEvent>(i, ev));
+                              lastPitch = p;
+                              }
                         }
                   lastPointTick = nextPointTick;
                   }
@@ -1110,9 +1120,11 @@ void MidiRenderer::renderSpanners(const Chunk& chunk, EventMap* events)
                         }
                   if (s->tick2().ticks() >= tick1 && s->tick2().ticks() <= tick2) {
                         int t = s->tick2().ticks() + tickOffset + (2 - MScore::pedalEventsMinTicks);
-                        const RepeatSegment& lastRepeat = *score->repeatList().back();
-                        if (t > lastRepeat.utick + lastRepeat.len())
-                              t = lastRepeat.utick + lastRepeat.len();
+                        if (!score->repeatList().empty()) {
+                              const RepeatSegment& lastRepeat = *score->repeatList().back();
+                              if (t > lastRepeat.utick + lastRepeat.len())
+                                    t = lastRepeat.utick + lastRepeat.len();
+                              }
                         channelPedalEvents.at(channel).push_back(std::pair<int, std::pair<bool, int> >(t, std::pair<bool, int>(false, staff)));
                         }
                   }
@@ -1760,7 +1772,10 @@ std::vector<OrnamentExcursion> excursions = {
       //  articulation type            set of  duration       body         repeatp      suffix
       //                               styles          prefix                    sustainp
       { SymId::ornamentTurn,                any, _32nd, {},    {1,0,-1,0},   false, true, {}}
+      ,{SymId::ornamentTurnUp,              any, _32nd, {},    {1,0,-1,0},   false, true, {}}
+      ,{SymId::ornamentHaydn,               any, _32nd, {},    {1,0,-1,0},   false, true, {}}
       ,{SymId::ornamentTurnInverted,        any, _32nd, {},    {-1,0,1,0},   false, true, {}}
+      ,{SymId::ornamentTurnUpS,             any, _32nd, {},    {-1,0,1,0},   false, true, {}}
       ,{SymId::ornamentTurnSlash,           any, _32nd, {},    {-1,0,1,0},   false, true, {}}
       ,{SymId::ornamentTrill,           baroque, _32nd, {1,0}, {1,0},        true,  true, {}}
       ,{SymId::ornamentTrill,          defstyle, _32nd, {0,1}, {0,1},        true,  true, {}}
@@ -2070,9 +2085,24 @@ static QList<NoteEventList> renderChord(Chord* chord, int gateTime, int ontime, 
 
 void Score::createGraceNotesPlayEvents(const Fraction& tick, Chord* chord, int& ontime, int& trailtime)
       {
-      QVector<Chord*> gnb = chord->graceNotesBefore();
+      QVector<Chord*> gnb = {};
+      int nb = 0;
+      // exclude grace chords where all notes are set not to play
+      for (Chord* c : chord->graceNotesBefore()) {
+            bool play = false;
+            for (Note* note : c->notes()) {
+                  if (note->play()) {
+                        play = true;;
+                        break;
+                        }
+                  }
+            if (play) {
+                  gnb.push_back(c);
+                  nb++;
+                  }
+            }
+
       QVector<Chord*> gna = chord->graceNotesAfter();
-      int nb = gnb.size();
       int na = gna.size();
       if (0 == nb + na) {
             return; // return immediately if no grace notes to deal with

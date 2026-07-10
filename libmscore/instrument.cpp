@@ -352,6 +352,7 @@ void Instrument::read(XmlReader& e, Part* part)
       bool customDrumset = false;
       bool readSingleNoteDynamics = false;
 
+      auto defaultChannel = _channel[0];
       _channel.clear();       // remove default channel
       _id = e.attribute("id");
       while (e.readNextStartElement()) {
@@ -360,6 +361,8 @@ void Instrument::read(XmlReader& e, Part* part)
                   _singleNoteDynamics = e.readBool();
                   readSingleNoteDynamics = true;
                   }
+            else if (tag == "glissandoStyle") // Mu4 compatibility
+                  e.skipCurrentElement();
             else if (!readProperties(e, part, &customDrumset))
                   e.unknown();
             }
@@ -367,15 +370,17 @@ void Instrument::read(XmlReader& e, Part* part)
       if (_instrumentId.isEmpty())
             _instrumentId = recognizeInstrumentId();
 
-      if (channel(0) && channel(0)->program() == -1) {
-          channel(0)->setProgram(recognizeMidiProgram());
-      }
+      if (_channel.empty())
+            _channel.append(defaultChannel);
+
+      if (_channel[0] && _channel[0]->program() == -1)
+            _channel[0]->setProgram(recognizeMidiProgram());
 
       if (!readSingleNoteDynamics)
             setSingleNoteDynamicsFromTemplate();
 
       if (_useDrumset) {
-            if (_channel[0]->bank() == 0 && _channel[0]->synti().toLower() != "zerberus")
+            if (_channel[0] && _channel[0]->bank() == 0 && _channel[0]->synti().toLower() != "zerberus")
                   _channel[0]->setBank(128);
             }
       }
@@ -477,6 +482,8 @@ bool Instrument::readProperties(XmlReader& e, Part* part, bool* customDrumset)
             QString val(e.readElementText());
             setClefType(idx, ClefTypeList(clefType(idx)._concertClef, Clef::clefType(val)));
             }
+      else if (tag == "soundId")    // Mu4 compatibility
+            e.skipCurrentElement(); // skip, don't log
       else
             return false;
 
@@ -1609,8 +1616,8 @@ void Instrument::updateInstrumentId()
       const int val32ref = (idxref < 0) ? -1 : channel(idxref)->bank();
       QString fallback;
 
-      for (InstrumentGroup* g : instrumentGroups) {
-            for (InstrumentTemplate* it : g->instrumentTemplates) {
+      for (InstrumentGroup*& g : instrumentGroups) {
+            for (InstrumentTemplate*& it : g->instrumentTemplates) {
                   if (it->musicXMLid == instrumentId()) {
                         if (groupHack) {
                               if (fallback.isEmpty())
@@ -1618,7 +1625,7 @@ void Instrument::updateInstrumentId()
                                     // if no "strings.group" instrument with requested bank
                                     // is found, assume "Strings".
                                     fallback = it->id;
-                              for (const Channel& chan : it->channel) {
+                              for (Channel& chan : it->channel) {
                                     if ((chan.name() == arco) && (chan.bank() == val32ref)) {
                                           _id = it->id;
                                           return;

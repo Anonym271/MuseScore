@@ -20,8 +20,6 @@
 #ifndef __LOGINMANAGER_P_H__
 #define __LOGINMANAGER_P_H__
 
-#include "config.h"
-
 namespace Ms {
 
 //---------------------------------------------------------

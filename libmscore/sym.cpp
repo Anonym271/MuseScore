@@ -19,7 +19,6 @@
 
 #include "mscore/preferences.h"
 
-
 #include FT_GLYPH_H
 #include FT_IMAGE_H
 #include FT_BBOX_H
@@ -39,14 +38,14 @@ static const int FALLBACK_FONT = 1;       // Bravura
 QVector<ScoreFont> ScoreFont::_builtinScoreFonts {
       ScoreFont("Leland",     "Leland",      ":/fonts/leland/",    "Leland.otf"   ),
       ScoreFont("Bravura",    "Bravura",     ":/fonts/bravura/",   "Bravura.otf"  ),
-      ScoreFont("Emmentaler", "MScore",      ":/fonts/mscore/",    "mscore.ttf"   ),
+      ScoreFont("Emmentaler", "MScore",      ":/fonts/mscore/",    "MScore.otf"   ),
       ScoreFont("Gonville",   "Gootville",   ":/fonts/gootville/", "Gootville.otf"),
       ScoreFont("MuseJazz",   "MuseJazz",    ":/fonts/musejazz/",  "MuseJazz.otf" ),
       ScoreFont("Petaluma",   "Petaluma",    ":/fonts/petaluma/",  "Petaluma.otf" ),
       ScoreFont("Finale Maestro", "Finale Maestro", ":/fonts/finalemaestro/", "FinaleMaestro.otf"),
       ScoreFont("Finale Broadway", "Finale Broadway", ":/fonts/finalebroadway/", "FinaleBroadway.otf"),
       };
-QVector<ScoreFont> ScoreFont::_userScoreFonts {};
+QVector<ScoreFont> ScoreFont::_privateScoreFonts {};
 QVector<ScoreFont> ScoreFont::_systemScoreFonts {};
 QVector<ScoreFont> ScoreFont::_allScoreFonts {};
 
@@ -3079,7 +3078,7 @@ const std::array<const char*, int(SymId::lastSym)+1> Sym::symUserNames = { {
       "23 small diesis down",
       "23 small diesis up, (23S)",
       QT_TRANSLATE_NOOP("symUserNames", "25 small diesis down, 2° down [53 EDO]"),
-      QT_TRANSLATE_NOOP("symUserNames", "25 small diesis up, (25S, ~5:13S, ~37S, 5C plus 5C), 2° up [53 EDO]"),
+      QT_TRANSLATE_NOOP("symUserNames", "25 small diesis up, (25S, ~5:13S, ~37S, 5C plus 5C), 2° up [53 EDO]"),
       "2 minas down, 65/77-schismina down, 0.83 cents down",
       "2 minas up, 65/77-schismina up, 0.83 cents up",
       "2 tinas down, 1/(7³⋅17)-schismina down, 0.30 cents down",
@@ -3087,7 +3086,7 @@ const std::array<const char*, int(SymId::lastSym)+1> Sym::symUserNames = { {
       QT_TRANSLATE_NOOP("symUserNames", "35 large diesis down, 2° down [50 EDO], 5/18-tone down"),
       QT_TRANSLATE_NOOP("symUserNames", "35 large diesis up, (35L, ~13L, ~125L, sharp less 35M), 2°50 up"),
       QT_TRANSLATE_NOOP("symUserNames", "35 medium diesis down, 1°[50] 2°[27] down, 2/9-tone down"),
-      QT_TRANSLATE_NOOP("symUserNames", "35 medium diesis up, (35M, ~13M, ~125M, 5C plus 7C), 2/9-tone up"),
+      QT_TRANSLATE_NOOP("symUserNames", "35 medium diesis up, (35M, ~13M, ~125M, 5C plus 7C), 2/9-tone up"),
       "3 tinas down, 1 mina down, 1/(5⋅7⋅13)-schismina down, 0.42 cents down",
       "3 tinas up, 1 mina up, 1/(5⋅7⋅13)-schismina up, 0.42 cents up",
       "49 large diesis down",
@@ -3117,7 +3116,7 @@ const std::array<const char*, int(SymId::lastSym)+1> Sym::symUserNames = { {
       "5:49 medium diesis down",
       "5:49 medium diesis up, (5:49M, half apotome)",
       QT_TRANSLATE_NOOP("symUserNames", "5:7 kleisma down"),
-      QT_TRANSLATE_NOOP("symUserNames", "5:7 kleisma up, (5:7k, ~11:13k, 7C less 5C)"),
+      QT_TRANSLATE_NOOP("symUserNames", "5:7 kleisma up, (5:7k, ~11:13k, 7C less 5C)"),
       "6 tinas down, 2 minas down, 65/77-schismina down, 0.83 cents down",
       "6 tinas up, 2 minas up, 65/77-schismina up, 0.83 cents up",
       QT_TRANSLATE_NOOP("symUserNames", "7 comma down, 1° down [43 EDO], 2° down [72 EDO], 1/6-tone down"),
@@ -4658,17 +4657,17 @@ const std::array<const char*, int(SymId::lastSym)+1> Sym::symUserNames = { {
       "Oblique form, descending 5th, black and void",
       "Oblique form, descending 5th, void",
       "Oblique form, descending 5th, white",
-      "Tempus perfectum cum prolatione perfecta (9/8)",
-      "Tempus imperfectum cum prolatione imperfecta diminution 4",
-      "Tempus imperfectum cum prolatione imperfecta diminution 5",
-      "Tempus perfectum cum prolatione imperfecta (3/4)",
-      "Tempus perfectum cum prolatione imperfecta diminution 1 (3/8)",
-      "Tempus perfectum cum prolatione perfecta diminution 2 (9/16)",
-      "Tempus imperfectum cum prolatione perfecta (6/8)",
-      "Tempus imperfectum cum prolatione imperfecta (2/4)",
-      "Tempus imperfectum cum prolatione imperfecta diminution 1 (2/2)",
-      "Tempus imperfectum cum prolatione imperfecta diminution 2 (6/16)",
-      "Tempus imperfectum cum prolatione imperfecta diminution 3 (2/2)",
+      QT_TRANSLATE_NOOP("symUserNames", "Tempus perfectum cum prolatione perfecta (9/8)"),
+      QT_TRANSLATE_NOOP("symUserNames", "Tempus imperfectum cum prolatione imperfecta diminution 4"),
+      QT_TRANSLATE_NOOP("symUserNames", "Tempus imperfectum cum prolatione imperfecta diminution 5"),
+      QT_TRANSLATE_NOOP("symUserNames", "Tempus perfectum cum prolatione imperfecta (3/4)"),
+      QT_TRANSLATE_NOOP("symUserNames", "Tempus perfectum cum prolatione imperfecta diminution 1 (3/8)"),
+      QT_TRANSLATE_NOOP("symUserNames", "Tempus perfectum cum prolatione perfecta diminution 2 (9/16)"),
+      QT_TRANSLATE_NOOP("symUserNames", "Tempus imperfectum cum prolatione perfecta (6/8)"),
+      QT_TRANSLATE_NOOP("symUserNames", "Tempus imperfectum cum prolatione imperfecta (2/4)"),
+      QT_TRANSLATE_NOOP("symUserNames", "Tempus imperfectum cum prolatione imperfecta diminution 1 (2/2)"),
+      QT_TRANSLATE_NOOP("symUserNames", "Tempus imperfectum cum prolatione imperfecta diminution 2 (6/16)"),
+      QT_TRANSLATE_NOOP("symUserNames", "Tempus imperfectum cum prolatione imperfecta diminution 3 (2/2)"),
       "Combining dot",
       "Combining void dot",
       "Combining vertical stroke",
@@ -5194,7 +5193,7 @@ const std::array<const char*, int(SymId::lastSym)+1> Sym::symUserNames = { {
       "Double oblique straight lines NW-SE",
       "Double oblique straight lines SW-NE",
       "Curve below",
-      "Haydn ornament",
+      QT_TRANSLATE_NOOP("symUserNames", "Haydn ornament"),
       "Ornament high left concave stroke",
       "Ornament high left convex stroke",
       "Ornament high right concave stroke",
@@ -5265,8 +5264,8 @@ const std::array<const char*, int(SymId::lastSym)+1> Sym::symUserNames = { {
       QT_TRANSLATE_NOOP("symUserNames", "Turn"),
       QT_TRANSLATE_NOOP("symUserNames", "Inverted turn"),
       QT_TRANSLATE_NOOP("symUserNames", "Turn with slash"),
-      "Turn up",
-      "Inverted turn up",
+      QT_TRANSLATE_NOOP("symUserNames", "Turn up"),
+      QT_TRANSLATE_NOOP("symUserNames", "Inverted turn up"),
       "Curve above",
       "Vertical line",
       "Ornament zig-zag line without right-hand end",
@@ -5846,7 +5845,7 @@ const std::array<const char*, int(SymId::lastSym)+1> Sym::symUserNames = { {
       "Tuplet 0",
       "Tuplet 1",
       "Tuplet 2",
-      "Tuplet 3",
+      QT_TRANSLATE_NOOP("symUserNames", "Tuplet 3"),
       "Tuplet 4",
       "Tuplet 5",
       "Tuplet 6",
@@ -6183,6 +6182,8 @@ QVector<oldName> oldNames = {
       {"down bow",                              SymId::stringsDownBow },            // scripts.downbow
       {"reverse turn",                          SymId::ornamentTurnInverted },      // scripts.reverseturn
       {"turn",                                  SymId::ornamentTurn },              // scripts.turn
+      {"vertical turn",                         SymId::ornamentTurnUp },            // scripts.verticalturn
+      {"reverse vertical turn",                 SymId::ornamentTurnUpS },           // scripts.reverseverticalturn
       {"trill",                                 SymId::ornamentTrill },             // scripts.trill
       {"upedal heel",                           SymId::keyboardPedalHeel1 },        // scripts.upedalheel
       {"dpedalheel",                            SymId::keyboardPedalHeel2 },        // scripts.dpedalheel
@@ -6321,6 +6322,7 @@ const QVector<SymId> Sym::commonScoreSymbols = {
       SymId::metNote64thUp,
       SymId::metNote128thUp,
       SymId::metAugmentationDot,
+      SymId::tuplet3,
       SymId::restWholeLegerLine,
       SymId::restHalfLegerLine,
       SymId::restQuarter,
@@ -6588,8 +6590,8 @@ void Ms::ScoreFont::initScoreFonts()
       QFont::insertSubstitution("ScoreFont",      "Leland Text"); // alias for current Musical Text Font
       ScoreFont::fallbackFont();   // load fallback font
 
-      QString userFontsPath = preferences.getString(PREF_APP_PATHS_MYSCOREFONTS);
-      scanUserFonts(userFontsPath);
+      QString privateFontsPath = preferences.getString(PREF_APP_PATHS_MYSCOREFONTS);
+      scanUserFonts(privateFontsPath);
       preferences.addOnSetListener([](const QString& key, const QVariant& value) {
             if (key == PREF_APP_PATHS_MYSCOREFONTS)
                   scanUserFonts(value.toString());
@@ -6609,27 +6611,27 @@ void Ms::ScoreFont::initScoreFonts()
 #endif
       for (QString& systemFontsPath : systemFontsPaths) {
             systemFontsPath += "/SMuFL/Fonts";
-            scanUserFonts(systemFontsPath, true);
+            scanUserFonts(systemFontsPath, false);
             }
       }
 
-void ScoreFont::scanUserFonts(const QString& path, bool system)
+void ScoreFont::scanUserFonts(const QString& path, bool isPrivate)
       {
       QVector<ScoreFont> userfonts;
 
       QDirIterator iterator(path, QDir::Dirs | QDir::NoDotAndDotDot | QDir::Readable);
 
       while (iterator.hasNext()) {
-            QString fontDir = iterator.next();
-            QString fontDirPath = iterator.filePath() + "/";
-            QString fontDirName = iterator.fileName();
+            iterator.next();
+            const QString fontDirPath = iterator.filePath();
+            const QString fontDirName = iterator.fileName();
 
             QString fontName;
             QString fontFilename;
             QDirIterator innerIterator(fontDirPath, { "*.otf", "*.ttf" }, QDir::Files);
 
             while (innerIterator.hasNext()) {
-                  QString potentialFontFile = innerIterator.next();
+                  const QString potentialFontFile = innerIterator.next();
                   QFileInfo fileinfo(potentialFontFile);
 
                   if (fileinfo.completeBaseName().toLower() == fontDirName.toLower()) {
@@ -6639,41 +6641,44 @@ void ScoreFont::scanUserFonts(const QString& path, bool system)
                         }
                   }
 
-            bool hasMetadataFile = QFileInfo::exists(fontDirPath + (system ? fontName : "metadata") + ".json");
+            bool hasMetadataFile = QFileInfo::exists(fontDirPath + "/" + fontName + ".json")
+                        || (isPrivate
+                            && (QFileInfo::exists(fontDirPath + "/" + fontName.toLower().replace(" ", "_") + "_metadata.json")
+                                || QFileInfo::exists(fontDirPath + "/" + "metadata.json")));
 
             if (hasMetadataFile && !fontFilename.isEmpty()) {
                   QByteArray name = fontName.toLocal8Bit();
                   QByteArray dp = fontDirPath.toLocal8Bit();
                   QByteArray fn = fontFilename.toLocal8Bit();
-                  userfonts << Ms::ScoreFont(name.data(), name.data(), dp.data(), fn.data());
+                  userfonts << Ms::ScoreFont(name.data(), name.data(), dp.data(), fn.data(), true);
                   }
             }
 
 
-      qDebug() << "Found" << userfonts.count() << (system ? "system" : "user") << "score font" << (userfonts.count() > 1? "s" : "") << " in" << path <<".";
+      qDebug("Found %d %s score font%s in \"%s\".", userfonts.count(), isPrivate ? "private" : "system", userfonts.count() > 1 ? "s" : "", qPrintable(path));
 
       // TODO: Check for fonts that duplicate built-in fonts
-      if (!system) // reset list when re-reading due to changed Preferences
-            _userScoreFonts.clear();
+      if (isPrivate) // reset list when re-reading due to changed Preferences
+            _privateScoreFonts.clear();
 
       // Make sure the fonts are loaded, to avoid the situation that MuseScore
       // thinks a font exists but in practice it has disappeared.
-      for (const ScoreFont& f : userfonts) {
+      for (ScoreFont& f : userfonts) {
             ScoreFont font = f;
             if (!font.face)
-                  font.load(system);
-            if (system)
-                  _systemScoreFonts.push_back(font);
+                  font.load(isPrivate);
+            if (isPrivate)
+                  _privateScoreFonts.push_back(font);
             else
-                  _userScoreFonts.push_back(font);
+                  _systemScoreFonts.push_back(font);
             }
 
       _allScoreFonts = _builtinScoreFonts;
-      _allScoreFonts << _userScoreFonts << _systemScoreFonts;
+      _allScoreFonts << _privateScoreFonts << _systemScoreFonts;
 
       // Include external and internal score fonts into QFontDatabase
       for (auto& f : _allScoreFonts) {
-            QString s(f._fontPath + f._filename);
+            QString s(f._fontPath + "/" + f._filename);
             if (-1 == QFontDatabase::addApplicationFont(s)) {
                   if (!MScore::testMode)
                         qDebug("Mscore: fatal error: cannot load font <%s>", qPrintable(s));
@@ -6740,9 +6745,77 @@ void ScoreFont::computeMetrics(Sym* sym, int code)
 //   load
 //---------------------------------------------------------
 
-void ScoreFont::load(bool system)
+// access needed stylistic alternates
+static const struct GlyphWithAlternates  {
+      QString     key;
+      QString     alternateKey;
+      SymId       alternateSymId;
+      } GLYPHS_WITH_ALTERNATES[] = {
+            {     QString("4stringTabClef"),
+                  QString("4stringTabClefSerif"),
+                  SymId::fourStringTabClefSerif
+            },
+            {     QString("6stringTabClef"),
+                  QString("6stringTabClefSerif"),
+                  SymId::sixStringTabClefSerif
+            },
+            {     QString("cClef"),
+                  QString("cClefFrench"),
+                  SymId::cClefFrench
+            },
+            {     QString("cClef"),
+                  QString("cClefFrench20C"),
+                  SymId::cClefFrench20C
+            },
+            {     QString("fClef"),
+                  QString("fClefFrench"),
+                  SymId::fClefFrench
+            },
+            {     QString("fClef"),
+                  QString("fClef19thCentury"),
+                  SymId::fClef19thCentury
+            },
+            {     QString("noteheadBlack"),
+                  QString("noteheadBlackOversized"),
+                  SymId::noteheadBlack
+            },
+            {     QString("noteheadHalf"),
+                  QString("noteheadHalfOversized"),
+                  SymId::noteheadHalf
+            },
+            {     QString("noteheadWhole"),
+                  QString("noteheadWholeOversized"),
+                  SymId::noteheadWhole
+            },
+            {     QString("noteheadDoubleWhole"),
+                  QString("noteheadDoubleWholeOversized"),
+                  SymId::noteheadDoubleWhole
+            },
+            {     QString("noteheadDoubleWholeSquare"),
+                  QString("noteheadDoubleWholeSquareOversized"),
+                  SymId::noteheadDoubleWholeSquare
+            },
+            {     QString("noteheadDoubleWhole"),
+                  QString("noteheadDoubleWholeAlt"),
+                  SymId::noteheadDoubleWholeAlt
+            },
+            {     QString("brace"),
+                  QString("braceSmall"),
+                  SymId::braceSmall
+            },
+            {     QString("brace"),
+                  QString("braceLarge"),
+                  SymId::braceLarge
+            },
+            {     QString("brace"),
+                  QString("braceLarger"),
+                  SymId::braceLarger
+            },
+      };
+
+void ScoreFont::load(bool isPrivate)
       {
-      QString facePath = _fontPath + _filename;
+      QString facePath = _fontPath + "/" + _filename;
       QFile f(facePath);
       if (!f.open(QIODevice::ReadOnly)) {
             qDebug("ScoreFont::load(): open failed <%s>", qPrintable(facePath));
@@ -6769,7 +6842,23 @@ void ScoreFont::load(bool system)
             }
 
       QJsonParseError error;
-      QFile fi(_fontPath + (system ? _name : "metadata") + ".json");
+
+      QFile fi(_fontPath + "/" + _name + ".json");
+      if (isPrivate) {
+            // Mu4 seems to iterate through the dir and take the last .json it finds
+            // (but see also https://github.com/musescore/MuseScore/pull/33757)
+            // I'd rather do it in a defined order and only on these 2 options
+            // plus the system default, which goes first
+            if (!fi.exists())
+                  fi.setFileName(_fontPath + "/" + _name.toLower().replace(" ", "_") + "_metadata.json");
+            if (!fi.exists())
+                  fi.setFileName(_fontPath + "/" + "metadata.json");
+            if (!fi.exists()) {
+                  qDebug("No metadata file found for %s", qPrintable(facePath));
+                  return;
+                  }
+            qDebug("%s is the metadata file for %s", qPrintable(fi.fileName()), qPrintable(facePath));
+            }
       if (!fi.open(QIODevice::ReadOnly))
             qDebug("ScoreFont: open glyph metadata file <%s> failed", qPrintable(fi.fileName()));
       QJsonObject metadataJson = QJsonDocument::fromJson(fi.readAll(), &error).object();
@@ -6777,10 +6866,18 @@ void ScoreFont::load(bool system)
             qDebug("Json parse error in <%s>(offset: %d): %s", qPrintable(fi.fileName()),
                error.offset, qPrintable(error.errorString()));
 
-      QJsonObject oo = metadataJson.value("glyphsWithAnchors").toObject();
-      for (const auto &i : oo.keys()) {
-            QJsonObject ooo = oo.value(i).toObject();
-            SymId symId = Sym::lnhash.value(i, SymId::noSym);
+      QJsonObject glyphsWithAnchors = metadataJson.value("glyphsWithAnchors").toObject();
+      for (auto &symName : glyphsWithAnchors.keys()) {
+            QJsonObject anchor = glyphsWithAnchors.value(symName).toObject();
+            SymId symId = Sym::lnhash.value(symName, SymId::noSym);
+            if (symId == SymId::noSym) {
+                for (auto& alternate : GLYPHS_WITH_ALTERNATES) {
+                    if (alternate.alternateKey == symName) {
+                        symId = alternate.alternateSymId;
+                        break;
+                    }
+                }
+            }
             if (symId == SymId::noSym) {
                   // currently, Bravura contains a bunch of entries in glyphsWithAnchors
                   // for glyph names that will not be found - flag32ndUpStraight, etc.
@@ -6788,50 +6885,57 @@ void ScoreFont::load(bool system)
                   continue;
                   }
             Sym* sym = &_symbols[int(symId)];
-            for (const auto &j : ooo.keys()) {
-                  if (j == "stemDownNW") {
-                        qreal x = ooo.value(j).toArray().at(0).toDouble();
-                        qreal y = ooo.value(j).toArray().at(1).toDouble();
+            for (auto &anchorId : anchor.keys()) {
+                  if (anchorId == "stemDownNW") {
+                        qreal x = anchor.value(anchorId).toArray().at(0).toDouble();
+                        qreal y = anchor.value(anchorId).toArray().at(1).toDouble();
                         sym->setStemDownNW(QPointF(x, -y) * SPATIUM20);
                         }
-                  else if (j == "stemUpSE") {
-                        qreal x = ooo.value(j).toArray().at(0).toDouble();
-                        qreal y = ooo.value(j).toArray().at(1).toDouble();
+                  else if (anchorId == "stemUpSE") {
+                        qreal x = anchor.value(anchorId).toArray().at(0).toDouble();
+                        qreal y = anchor.value(anchorId).toArray().at(1).toDouble();
                         sym->setStemUpSE(QPointF(x, -y) * SPATIUM20);
                         }
-                  else if (j == "stemDownSW") {
-                        qreal x = ooo.value(j).toArray().at(0).toDouble();
-                        qreal y = ooo.value(j).toArray().at(1).toDouble();
+                  else if (anchorId == "stemDownSW") {
+                        qreal x = anchor.value(anchorId ).toArray().at(0).toDouble();
+                        qreal y = anchor.value(anchorId).toArray().at(1).toDouble();
                         sym->setStemDownSW(QPointF(x, -y) * SPATIUM20);
                         }
-                  else if (j == "stemUpNW") {
-                        qreal x = ooo.value(j).toArray().at(0).toDouble();
-                        qreal y = ooo.value(j).toArray().at(1).toDouble();
+                  else if (anchorId == "stemUpNW") {
+                        qreal x = anchor.value(anchorId).toArray().at(0).toDouble();
+                        qreal y = anchor.value(anchorId).toArray().at(1).toDouble();
                         sym->setStemUpNW(QPointF(x, -y) * SPATIUM20);
                         }
-                  else if (j == "cutOutNE") {
-                        qreal x = ooo.value(j).toArray().at(0).toDouble();
-                        qreal y = ooo.value(j).toArray().at(1).toDouble();
+                  else if (anchorId == "cutOutNE") {
+                        qreal x = anchor.value(anchorId).toArray().at(0).toDouble();
+                        qreal y = anchor.value(anchorId).toArray().at(1).toDouble();
                         sym->setCutOutNE(QPointF(x, -y) * SPATIUM20);
                         }
-                  else if (j == "cutOutNW") {
-                        qreal x = ooo.value(j).toArray().at(0).toDouble();
-                        qreal y = ooo.value(j).toArray().at(1).toDouble();
+                  else if (anchorId == "cutOutNW") {
+                        qreal x = anchor.value(anchorId).toArray().at(0).toDouble();
+                        qreal y = anchor.value(anchorId).toArray().at(1).toDouble();
                         sym->setCutOutNW(QPointF(x, -y) * SPATIUM20);
                         }
-                  else if (j == "cutOutSE") {
-                        qreal x = ooo.value(j).toArray().at(0).toDouble();
-                        qreal y = ooo.value(j).toArray().at(1).toDouble();
+                  else if (anchorId == "cutOutSE") {
+                        qreal x = anchor.value(anchorId).toArray().at(0).toDouble();
+                        qreal y = anchor.value(anchorId).toArray().at(1).toDouble();
                         sym->setCutOutSE(QPointF(x, -y) * SPATIUM20);
                         }
-                  else if (j == "cutOutSW") {
-                        qreal x = ooo.value(j).toArray().at(0).toDouble();
-                        qreal y = ooo.value(j).toArray().at(1).toDouble();
+                  else if (anchorId == "cutOutSW") {
+                        qreal x = anchor.value(anchorId).toArray().at(0).toDouble();
+                        qreal y = anchor.value(anchorId).toArray().at(1).toDouble();
                         sym->setCutOutSW(QPointF(x, -y) * SPATIUM20);
                         }
+#if 0 // TODO ?
+                  else if (anchorId == "opticalCenter") {
+                        qreal x = anchor.value(anchorId).toArray().at(0).toDouble();
+                        qreal y = anchor.value(anchorId).toArray().at(1).toDouble();
+                        sym->opticalCenter(QPointF(x, -y) * SPATIUM20);
+                        }
+#endif
                   }
             }
-      oo = metadataJson.value("engravingDefaults").toObject();
+      QJsonObject engravingDefaults = metadataJson.value("engravingDefaults").toObject();
       static std::list<std::pair<QString, Sid>> engravingDefaultsMapping = {
             // "arrowShaftThickness" not supported
             { "barlineSeparation",             Sid::doubleBarDistance },
@@ -6866,18 +6970,18 @@ void ScoreFont::load(bool system)
             { "tieMidpointThickness",          Sid::tieMidWidth },
             { "tupletBracketThickness",        Sid::tupletBracketWidth }
             };
-      for (const auto &i : oo.keys()) {
+      for (auto &engravingDefaultsId : engravingDefaults.keys()) {
             for (auto mapping : engravingDefaultsMapping) {
-                  if (i == mapping.first) {
-                        qreal value = oo.value(i).toDouble();
+                  if (engravingDefaultsId == mapping.first) {
+                        qreal value = engravingDefaults.value(engravingDefaultsId).toDouble();
 
-                        if (i == "beamSpacing")
-                              value /= oo.value("beamThickness").toDouble();
+                        if (engravingDefaultsId == "beamSpacing")
+                              value /= engravingDefaults.value("beamThickness").toDouble();
 
                         _engravingDefaults.push_back(std::make_pair(mapping.second, value));
                         }
-                  else if (i == "textEnclosureThickness")
-                        _textEnclosureThickness = oo.value(i).toDouble();
+                  else if (engravingDefaultsId == "textEnclosureThickness")
+                        _textEnclosureThickness = engravingDefaults.value(engravingDefaultsId).toDouble();
                   }
             }
       _engravingDefaults.push_back(std::make_pair(Sid::musicalTextFont, QString("%1 Text").arg(_family)));
@@ -6961,88 +7065,18 @@ void ScoreFont::load(bool system)
                   }
             }
 
-      // access needed stylistic alternates
-
-      struct StylisticAlternate {
-            QString     key;
-            QString     altKey;
-            SymId       id;
-            }
-      alternate[] = {
-                  {     QString("4stringTabClef"),
-                        QString("4stringTabClefSerif"),
-                        SymId::fourStringTabClefSerif
-                  },
-                  {     QString("6stringTabClef"),
-                        QString("6stringTabClefSerif"),
-                        SymId::sixStringTabClefSerif
-                  },
-                  {     QString("cClef"),
-                        QString("cClefFrench"),
-                        SymId::cClefFrench
-                  },
-                  {     QString("cClef"),
-                        QString("cClefFrench20C"),
-                        SymId::cClefFrench20C
-                  },
-                  {     QString("fClef"),
-                        QString("fClefFrench"),
-                        SymId::fClefFrench
-                  },
-                  {     QString("fClef"),
-                        QString("fClef19thCentury"),
-                        SymId::fClef19thCentury
-                  },
-                  {     QString("noteheadBlack"),
-                        QString("noteheadBlackOversized"),
-                        SymId::noteheadBlack
-                  },
-                  {     QString("noteheadHalf"),
-                        QString("noteheadHalfOversized"),
-                        SymId::noteheadHalf
-                  },
-                  {     QString("noteheadWhole"),
-                        QString("noteheadWholeOversized"),
-                        SymId::noteheadWhole
-                  },
-                  {     QString("noteheadDoubleWhole"),
-                        QString("noteheadDoubleWholeOversized"),
-                        SymId::noteheadDoubleWhole
-                  },
-                  {     QString("noteheadDoubleWholeSquare"),
-                        QString("noteheadDoubleWholeSquareOversized"),
-                        SymId::noteheadDoubleWholeSquare
-                  },
-                  {     QString("noteheadDoubleWhole"),
-                        QString("noteheadDoubleWholeAlt"),
-                        SymId::noteheadDoubleWholeAlt
-                  },
-                  {     QString("brace"),
-                        QString("braceSmall"),
-                        SymId::braceSmall
-                  },
-                  {     QString("brace"),
-                        QString("braceLarge"),
-                        SymId::braceLarge
-                  },
-                  {     QString("brace"),
-                        QString("braceLarger"),
-                        SymId::braceLarger
-                  }
-            };
-
       // find each relevant alternate in "glyphsWithAlternates" value
       QJsonObject oa = metadataJson.value("glyphsWithAlternates").toObject();
       bool ok;
-      for (const StylisticAlternate& c : alternate) {
-            QJsonObject::const_iterator i = oa.find(c.key);
+      for (const GlyphWithAlternates& c : GLYPHS_WITH_ALTERNATES) {
+            QJsonObject::const_iterator i = oa.constFind(c.key);
             if (i != oa.end()) {
                   QJsonArray oaa = i.value().toObject().value("alternates").toArray();
-                  // locate the relevant altKey in alternate array
+                  // locate the relevant alternateKey in alternate array
                   for (const auto &j : qAsConst(oaa)) {
                         QJsonObject jo = j.toObject();
-                        if (jo.value("name") == c.altKey) {
-                              Sym* sym = &_symbols[int(c.id)];
+                        if (jo.value("name") == c.alternateKey) {
+                              Sym* sym = &_symbols[int(c.alternateSymId)];
                               int code = jo.value("codepoint").toString().midRef(2).toInt(&ok, 16);
                               if (ok)
                                     computeMetrics(sym, code);
@@ -7070,6 +7104,11 @@ void ScoreFont::load(bool system)
                   }
             }
 #endif
+      if (face) {
+            QString converted(face->family_name);
+            _family = converted;
+            }
+
       }
 
 //---------------------------------------------------------
@@ -7093,7 +7132,7 @@ ScoreFont* ScoreFont::fontFactory(QString s)
             return fallbackFont();
             }
 
-      if (!f->face)
+      if (!f->face || f->isExternal())
             f->load();
       return f;
       }
@@ -7267,6 +7306,7 @@ ScoreFont::ScoreFont(const ScoreFont& f)
       _family   = f._family;
       _fontPath = f._fontPath;
       _filename = f._filename;
+      _external = f._external;
 
       // fontImage;
       cache = 0;

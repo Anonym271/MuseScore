@@ -33,7 +33,7 @@ namespace Ms {
 #endif
 
 static const qreal subScriptSize     = 0.6;
-static const qreal subScriptOffset   = 0.5;       // of x-height
+static const qreal subScriptOffset   = 0.5;      // of x-height
 static const qreal superScriptOffset = -.9;      // of x-height
 
 //static const qreal tempotextOffset = 0.4; // of x-height // 80% of 50% = 2 spatiums
@@ -46,17 +46,17 @@ static const qreal superScriptOffset = -.9;      // of x-height
 
 static QString accessibleChar(QChar chr)
       {
-      if (chr == " ") return QObject::tr("space");
-      if (chr == "-") return QObject::tr("dash");
-      if (chr == "=") return QObject::tr("equals");
-      if (chr == ",") return QObject::tr("comma");
-      if (chr == ".") return QObject::tr("period");
-      if (chr == ":") return QObject::tr("colon");
-      if (chr == ";") return QObject::tr("semicolon");
-      if (chr == "(") return QObject::tr("left parenthesis");
-      if (chr == ")") return QObject::tr("right parenthesis");
-      if (chr == "[") return QObject::tr("left bracket");
-      if (chr == "]") return QObject::tr("right bracket");
+      if (chr == ' ') return QObject::tr("space");
+      if (chr == '-') return QObject::tr("dash");
+      if (chr == '=') return QObject::tr("equals");
+      if (chr == ',') return QObject::tr("comma");
+      if (chr == '.') return QObject::tr("period");
+      if (chr == ':') return QObject::tr("colon");
+      if (chr == ';') return QObject::tr("semicolon");
+      if (chr == '(') return QObject::tr("left parenthesis");
+      if (chr == ')') return QObject::tr("right parenthesis");
+      if (chr == '[') return QObject::tr("left bracket");
+      if (chr == ']') return QObject::tr("right bracket");
       return chr;
       }
 
@@ -188,9 +188,10 @@ QChar TextCursor::currentCharacter() const
 
 QString TextCursor::currentWord() const
       {
+      static QRegularExpression regex (" .*");
       const TextBlock& t = _text->_layout[row()];
       QString s = t.text(column(), -1);
-      return s.remove(QRegularExpression(" .*"));
+      return s.remove(regex);
       }
 
 //---------------------------------------------------------
@@ -1709,6 +1710,12 @@ void TextBase::createLayout()
                               }
                         else if (token == "/u")
                               cursor.format()->setUnderline(false);
+                        else if (token == "s") {
+                              cursor.format()->setStrike(true);
+                              unstyleFontStyle = true;
+                              }
+                        else if (token == "/s")
+                              cursor.format()->setStrike(false);
                         else if (token == "sub")
                               cursor.format()->setValign(VerticalAlignment::AlignSubScript);
                         else if (token == "/sub")
@@ -1895,7 +1902,7 @@ void TextBase::layoutFrame()
       else
             frame = bbox();
 
-      if (square()) {
+      if (rectangle()) {
 #if 0
             // "real" square
             if (frame.width() > frame.height()) {
@@ -1907,8 +1914,8 @@ void TextBase::layoutFrame()
                   frame.adjust(-w * .5, 0.0, w * .5, 0.0);
                   }
 #else
-            // make sure width >= height
-            if (frame.height() > frame.width()) {
+            // make sure width >= height and only a single line (so basically square for single characters)
+            if (frame.height() > frame.width() && rows() == 1) {
                   qreal w = frame.height() - frame.width();
                   frame.adjust(-w * .5, 0.0, w * .5, 0.0);
                   }
@@ -2323,7 +2330,7 @@ bool TextBase::mousePress(EditData& ed)
       TextEditData* ted = static_cast<TextEditData*>(ed.getData(this));
       if (!ted->cursor.set(ed.startMove, shift ? QTextCursor::KeepAnchor : QTextCursor::MoveAnchor))
             return false;
-      if (ed.buttons == Qt::MidButton)
+      if (ed.buttons == Qt::MiddleButton)
             paste(ed);
       score()->setUpdateAll();
       return true;
@@ -2819,6 +2826,11 @@ bool TextBase::setProperty(Pid pid, const QVariant& v)
             genText();
       bool rv = true;
       switch (pid) {
+            case Pid::COLOR:
+                  if (color() == frameColor())
+                        setFrameColor(v.value<QColor>());
+                  Element::setProperty(pid, v);
+                  break;
             case Pid::SUB_STYLE:
                   initTid(Tid(v.toInt()));
                   break;

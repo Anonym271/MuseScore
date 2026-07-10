@@ -135,7 +135,7 @@ public:
                           QXmlStreamReader& e, Score* score, MxmlLogger* logger);
       QSet<Lyrics*> extendedLyrics() const { return _extendedLyrics; }
       QMap<int, Lyrics*> numberedLyrics() const { return _numberedLyrics; }
-      void parse();
+      void parse(bool visibility = true);
 private:
       void skipLogCurrElem();
       void readElision(QString& formattedText);
@@ -175,6 +175,8 @@ public:
       QString print() const;
       void setText(const QString& text) { _text = text; }
       QString text() const { return _text; }
+      void setVisible(const bool visible) { _visible = visible; }
+      bool visible() const { return _visible; }
       static Notation notationWithAttributes(const QString& name, const QXmlStreamAttributes attributes,
                                 const QString& parent = QString(), const SymId& symId = SymId::noSym);
 private:
@@ -184,6 +186,7 @@ private:
       QString _subType;
       QString _text;
       std::map<QString, QString> _attributes;
+      bool _visible = true;
       };
 
 //---------------------------------------------------------
@@ -227,7 +230,7 @@ class MusicXMLParserNotations {
 public:
       MusicXMLParserNotations(QXmlStreamReader& e, Score* score, MxmlLogger* logger, MusicXMLParserPass1& pass1);
       void parse();
-      void addToScore(ChordRest* const cr, Note* const note, const int tick, SlurStack& slurs,
+      void addToScore(ChordRest* const cr, Note* const note, const Fraction& tick, SlurStack& slurs,
                       Glissando* glissandi[MAX_NUMBER_LEVEL][2], MusicXmlSpannerMap& spanners, TrillStack& trills,
                       MusicXMLTieMap& ties, std::vector<Note*>& unstartedTieNotes, std::vector<Note*>& unendedTieNotes);
       QString errors() const { return _errors; }
@@ -235,6 +238,7 @@ public:
       bool hasTremolo() const { return _hasTremolo; }
       QString tremoloType() const { return _tremoloType; }
       QString tremoloSmufl() const { return _tremoloSmufl; }
+      QColor tremoloColor() const { return _tremoloColor; }
       int tremoloNr() const { return _tremoloNr; }
       bool mustStopGraceAFter() const { return _slurStop || _wavyLineStop; }
 private:
@@ -271,6 +275,7 @@ private:
       QString _tremoloType;
       int _tremoloNr { 0 };
       QString _tremoloSmufl;
+      QColor _tremoloColor;
       QString _wavyLineType;
       int _wavyLineNo { 0 };
       QString _arpeggioType;
@@ -278,6 +283,7 @@ private:
       bool _slurStop { false };
       bool _slurStart { false };
       bool _wavyLineStop { false };
+      bool _visible = true;
       };
 
 //---------------------------------------------------------
@@ -405,6 +411,7 @@ public:
                      DelayedDirectionsList& delayedDirections, InferredFingeringsList& inferredFingerings, HarmonyMap& harmonyMap);
       qreal totalY() const { return _defaultY + _relativeY; }
       QString placement() const;
+      void setBpm(const double bpm) { _tpoSound = bpm; }
 
 private:
       QXmlStreamReader& _e;
@@ -415,11 +422,14 @@ private:
 
       QColor _color;
       Hairpin* _inferredHairpinStart = nullptr;
+      QColor _dynamicsColor;
+      QString _dynamicsPlacement;
       QStringList _dynamicsList;
       QString _enclosure;
       QString _wordsText;
       QString _metroText;
       QString _rehearsalText;
+      QString _justify;
       QString _dynaVelocity;
       QString _sndCoda;
       QString _sndDacapo;

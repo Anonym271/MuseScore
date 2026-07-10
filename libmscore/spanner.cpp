@@ -13,6 +13,7 @@
 #include "chord.h"
 #include "chordrest.h"
 #include "connector.h"
+#include "log.h"
 #include "lyrics.h"
 #include "measure.h"
 #include "musescoreCore.h"
@@ -127,9 +128,17 @@ QByteArray SpannerSegment::mimeData(const QPointF& dragOffset) const
 
 Element* SpannerSegment::propertyDelegate(Pid pid)
       {
-      if (pid == Pid::COLOR || pid == Pid::VISIBLE || pid == Pid::PLACEMENT)
-            return spanner();
-      return 0;
+      switch (pid) {
+            case Pid::COLOR:
+            case Pid::PLACEMENT:
+            case Pid::SPANNER_TICK:
+            case Pid::SPANNER_TICKS:
+            case Pid::SPANNER_TRACK2:
+            case Pid::VISIBLE:
+                  return spanner();
+            default: break;
+            }
+      return nullptr;
       }
 
 //---------------------------------------------------------
@@ -1109,7 +1118,11 @@ void Spanner::setTick2(const Fraction& f)
 
 void Spanner::setTicks(const Fraction& f)
       {
-      _ticks = f;
+      IF_ASSERT_FAILED(f.positive())
+            _ticks = -f;
+      else
+            _ticks = f;
+
       if (score())
             score()->spannerMap().setDirty();
       }

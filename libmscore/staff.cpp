@@ -202,7 +202,7 @@ void Staff::addBracket(BracketItem* b)
             //
             // create new bracket level
             //
-            for (Staff* s : score()->staves()) {
+            for (Staff*& s : score()->staves()) {
                   if (s == this)
                         s->_brackets.append(b);
                   else {
@@ -635,7 +635,7 @@ void Staff::write(XmlWriter& xml) const
       xml.stag(this, QString("id=\"%1\"").arg(idx + 1));
       if (links()) {
             Score* s = masterScore();
-            for (auto le : *links()) {
+            for (auto*& le : *links()) {
                   Staff* staff = toStaff(le);
                   if ((staff->score() == s) && (staff != this))
                         xml.tag("linkedTo", staff->idx() + 1);
@@ -662,8 +662,6 @@ void Staff::write(XmlWriter& xml) const
             xml.tag("defaultTransposingClef", ClefInfo::tag(ct._transposingClef));
             }
 
-      if (invisible(Fraction(0,1)))
-            xml.tag("invisible", invisible(Fraction(0,1)));
       if (hideWhenEmpty() != HideMode::AUTO)
             xml.tag("hideWhenEmpty", int(hideWhenEmpty()));
       if (cutaway())
@@ -687,7 +685,6 @@ void Staff::write(XmlWriter& xml) const
       writeProperty(xml, Pid::STAFF_BARLINE_SPAN_FROM);
       writeProperty(xml, Pid::STAFF_BARLINE_SPAN_TO);
       writeProperty(xml, Pid::STAFF_USERDIST);
-      writeProperty(xml, Pid::STAFF_COLOR);
       writeProperty(xml, Pid::PLAYBACK_VOICE1);
       writeProperty(xml, Pid::PLAYBACK_VOICE2);
       writeProperty(xml, Pid::PLAYBACK_VOICE3);
@@ -702,8 +699,12 @@ void Staff::write(XmlWriter& xml) const
 void Staff::read(XmlReader& e)
       {
       while (e.readNextStartElement()) {
-            if (!readProperties(e))
-                  e.unknown();
+            if (!readProperties(e)) {
+                  if (e.name() == "eid") // Mu4.5+ compatibility
+                        e.skipCurrentElement(); // skip, don't log
+                  else
+                        e.unknown();
+                  }
             }
       }
 
@@ -920,7 +921,7 @@ QList<Note*> Staff::getNotes() const
 
 void Staff::addChord(QList<Note*>& list, Chord* chord, int voice) const
       {
-      for (Chord* c : chord->graceNotes())
+      for (Chord*& c : chord->graceNotes())
             addChord(list, c, voice);
       for (Note* note : chord->notes()) {
             if (note->tieBack())
@@ -996,7 +997,7 @@ bool Staff::primaryStaff() const
             return true;
       QList<Staff*> s;
       QList<Staff*> ss;
-      for (auto e : *_links) {
+      for (auto*& e : *_links) {
             Staff* staff = toStaff(e);
             if (staff->score() == score()) {
                   s.append(staff);
@@ -1305,7 +1306,7 @@ QList<Staff*> Staff::staffList() const
       {
       QList<Staff*> staffList;
       if (_links) {
-            for (ScoreElement* e : *_links)
+            for (ScoreElement*& e : *_links)
                   staffList.append(toStaff(e));
 //            staffList = _linkedStaves->staves();
             }
@@ -1340,13 +1341,15 @@ QVariant Staff::getProperty(Pid id) const
       {
       switch (id) {
             case Pid::SMALL:
-                  return staffType(Fraction(0,1))->isSmall();
+                  return staffType(Fraction(0, 1))->isSmall();
             case Pid::MAG:
-                  return staffType(Fraction(0,1))->userMag();
+                  return staffType(Fraction(0, 1))->userMag();
+            case Pid::LINE_DISTANCE:
+                 return staffType(Fraction(0, 1))->lineDistance();
             case Pid::STAFF_INVISIBLE:
-                  return staffType(Fraction(0,1))->invisible();
+                  return staffType(Fraction(0, 1))->invisible();
             case Pid::STAFF_COLOR:
-                  return staffType(Fraction(0,1))->color();
+                  return staffType(Fraction(0, 1))->color();
             case Pid::PLAYBACK_VOICE1:
                   return playbackVoice(0);
             case Pid::PLAYBACK_VOICE2:
@@ -1379,19 +1382,22 @@ bool Staff::setProperty(Pid id, const QVariant& v)
       {
       switch (id) {
             case Pid::SMALL: {
-                  qreal _spatium = spatium(Fraction(0,1));
+                  qreal _spatium = spatium(Fraction(0, 1));
                   staffType(Fraction(0,1))->setSmall(v.toBool());
-                  localSpatiumChanged(_spatium, spatium(Fraction(0,1)), Fraction(0, 1));
+                  localSpatiumChanged(_spatium, spatium(Fraction(0, 1)), Fraction(0, 1));
                   break;
                   }
             case Pid::MAG: {
-                  qreal _spatium = spatium(Fraction(0,1));
+                  qreal _spatium = spatium(Fraction(0, 1));
                   staffType(Fraction(0,1))->setUserMag(v.toReal());
-                  localSpatiumChanged(_spatium, spatium(Fraction(0,1)), Fraction(0, 1));
+                  localSpatiumChanged(_spatium, spatium(Fraction(0, 1)), Fraction(0, 1));
+                  break;
                   }
+            case Pid::LINE_DISTANCE:
+                  staffType(Fraction(0, 1))->setLineDistance(v.value<Spatium>());
                   break;
             case Pid::STAFF_COLOR:
-                  setColor(Fraction(0,1),v.value<QColor>());
+                  setColor(Fraction(0, 1), v.value<QColor>());
                   break;
             case Pid::PLAYBACK_VOICE1:
                   setPlaybackVoice(0, v.toBool());
@@ -1424,8 +1430,8 @@ bool Staff::setProperty(Pid id, const QVariant& v)
                         if (e && e->isBarLine() && !e->generated())
                               toBarLine(e)->setSpanStaff(v.toInt());
                         }
-                  }
                   break;
+                  }
             case Pid::STAFF_BARLINE_SPAN_FROM:
                   setBarLineFrom(v.toInt());
                   break;

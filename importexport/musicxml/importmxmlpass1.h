@@ -78,11 +78,12 @@ enum class MxmlTupletFlag : char {
       };
 
 enum class MusicXMLExporterSoftware : char {
-      SIBELIUS,
       DOLET6,
       DOLET8,
+      DORICO,
       FINALE,
       NOTEFLIGHT,
+      SIBELIUS,
       OTHER
       };
 
@@ -175,6 +176,7 @@ public:
       bool hasPart(const QString& id) const;
       Part* getPart(const QString& id) const { return _partMap.value(id); }
       MusicXmlPart getMusicXmlPart(const QString& id) const { return _parts.value(id); }
+      int nparts() const { return _parts.size(); }
       MusicXMLInstruments getInstruments(const QString& id) const { return _instruments.value(id); }
       void setDrumsetDefault(const QString& id, const QString& instrId, const NoteHead::Group hg, const int line, const Direction sd);
       MusicXmlInstrList getInstrList(const QString id) const;

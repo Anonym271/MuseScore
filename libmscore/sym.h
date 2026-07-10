@@ -42,7 +42,7 @@ namespace Ms {
 //---------------------------------------------------------
 
 BEGIN_QT_REGISTERED_ENUM(SymId)
-enum class SymId {
+enum class SymId : short {
       ///.\{
       noSym,
 
@@ -3157,22 +3157,25 @@ class ScoreFont {
       std::list<std::pair<Sid, QVariant>> _engravingDefaults;
       double _textEnclosureThickness = 0;
       mutable QFont* font { 0 };
+      bool _external { false };
 
-      static QVector<ScoreFont> _builtinScoreFonts;
-      static QVector<ScoreFont> _userScoreFonts;
-      static QVector<ScoreFont> _systemScoreFonts;
+      static QVector<ScoreFont> _builtinScoreFonts; // built onto the Application
+      static QVector<ScoreFont> _privateScoreFonts; // private to the Application
+      static QVector<ScoreFont> _systemScoreFonts;  // user wide and system wide installed fonts
       static QVector<ScoreFont> _allScoreFonts;
       static std::array<uint, size_t(SymId::lastSym)+1> _mainSymCodeTable;
-      void load(bool system = false);
+      void load(bool isPrivate = true);
       void computeMetrics(Sym* sym, int code);
 
    public:
       ScoreFont() {}
       ScoreFont(const ScoreFont&);
-      ScoreFont(const char* n, const char* f, const char* p, const char* fn)
-         : _name(n), _family(f), _fontPath(p), _filename(fn) {
+      ScoreFont(const char* n, const char* f, const char* p, const char* fn, bool external = false)
+         : _name(n), _family(f), _fontPath(p), _filename(fn), _external(external) {
             _symbols = QVector<Sym>(int(SymId::lastSym) + 1);
             }
+
+      ScoreFont& operator=(const Ms::ScoreFont&)=default;
       ~ScoreFont();
 
       const QString& name() const           { return _name;   }
@@ -3185,7 +3188,7 @@ class ScoreFont {
       QString fontPath() const { return _fontPath; }
 
       static void initScoreFonts();
-      static void scanUserFonts(const QString& path, bool system = false);
+      static void scanUserFonts(const QString& path, bool isPrivate = true);
       static ScoreFont* fontFactory(QString);
       static ScoreFont* fallbackFont();
       static const char* fallbackTextFont();
@@ -3225,6 +3228,7 @@ class ScoreFont {
 
       bool isValid(SymId id) const                    { return sym(id).isValid(); }
       bool useFallbackFont(SymId id) const;
+      bool isExternal() const { return _external; }
 
       Sym sym(SymId id) const;
       };

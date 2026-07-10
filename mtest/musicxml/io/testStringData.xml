@@ -36,16 +36,15 @@
     <measure number="1">
       <attributes>
         <divisions>1</divisions>
-        <key>
+        <key print-object="no">
           <fifths>0</fifths>
           </key>
-        <time>
+        <time print-object="no">
           <beats>4</beats>
           <beat-type>4</beat-type>
           </time>
         <clef>
           <sign>TAB</sign>
-          <line>5</line>
           </clef>
         <staff-details>
           <staff-lines>6</staff-lines>
@@ -75,9 +74,10 @@
             <tuning-alter>1</tuning-alter>
             <tuning-octave>9</tuning-octave>
             </staff-tuning>
+          <staff-size>150</staff-size>
           </staff-details>
         </attributes>
-      <note>
+      <note print-object="no">
         <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>

@@ -288,6 +288,7 @@ const std::list<const char*> MuseScore::_allFileOperationEntries {
             "file-open",
             "file-save",
             "file-save-online",
+            "file-reload",
             "print",
             "undo",
             "redo"
@@ -1407,6 +1408,7 @@ MuseScore::MuseScore()
       menuFile->addAction(getAction("file-save-as"));
       menuFile->addAction(getAction("file-save-a-copy"));
       menuFile->addAction(getAction("file-save-selection"));
+      menuFile->addAction(getAction("file-reload"));
       menuFile->addAction(getAction(saveOnlineMenuItem));
 
       menuFile->addSeparator();
@@ -1566,14 +1568,6 @@ MuseScore::MuseScore()
       connect(entryTools, SIGNAL(visibilityChanged(bool)), a, SLOT(setChecked(bool)));
       menuToolbars->addAction(a);
 
-#if 0
-      a = getAction("toggle-feedback");
-      a->setCheckable(true);
-      a->setChecked(feedbackTools->isVisible());
-      connect(feedbackTools, SIGNAL(visibilityChanged(bool)), a, SLOT(setChecked(bool)));
-      menuToolbars->addAction(a);
-#endif
-
       a = getAction("toggle-workspaces-toolbar");
       a->setCheckable(true);
       a->setChecked(workspacesTools->isVisible());
@@ -1645,14 +1639,14 @@ MuseScore::MuseScore()
       menuAdd->addMenu(menuAddPitch);
 
       menuAddInterval = new QMenu();
-      for (int i = 1; i < 10; ++i) {
+      for (int i = 1; i <= 10; ++i) { // unison, second abobe to tenth above
             char buffer[16];
             snprintf(buffer, sizeof buffer, "interval%d", i);
             a = getAction(buffer);
             menuAddInterval->addAction(a);
             }
       menuAddInterval->addSeparator();
-      for (int i = 2; i < 10; ++i) {
+      for (int i = 2; i <= 10; ++i) { // second below to tenth below
             char buffer[16];
             snprintf(buffer, sizeof buffer, "interval-%d", i);
             a = getAction(buffer);
@@ -1787,6 +1781,8 @@ MuseScore::MuseScore()
       menuTools->addAction(getAction("slash-rhythm"));
       menuTools->addSeparator();
 
+      menuTools->addAction(getAction("enh-both"));
+      menuTools->addAction(getAction("enh-current"));
       menuTools->addAction(getAction("pitch-spell"));
       menuTools->addAction(getAction("reset-groupings"));
       menuTools->addAction(getAction("resequence-rehearsal-marks"));
@@ -2328,8 +2324,7 @@ void MuseScore::helpBrowser1() const
       QString help = QString("https://musescore.org/redirect/help?tag=handbook&locale=%1").arg(getLocaleISOCode());
       //try to find an exact match
       bool found = false;
-      const QList<LanguageItem> langItems = _languages;
-      for (const LanguageItem& item : langItems) {
+      for (const LanguageItem& item : _languages) {
             if (item.key == lang) {
                   QString handbook = item.handbook;
                   if (!handbook.isNull()) {
@@ -2342,7 +2337,7 @@ void MuseScore::helpBrowser1() const
       //try a to find a match on first two letters
       if (!found && lang.size() > 2) {
             lang = lang.left(2);
-            for (const LanguageItem& item : langItems) {
+            for (const LanguageItem& item : _languages) {
                   if (item.key == lang){
                       QString handbook = item.handbook;
                       if (!handbook.isNull())
@@ -3095,8 +3090,13 @@ void MuseScore::createPlayPanel()
             playPanel->setGain(synti->gain());
             playPanel->setScore(cs);
             addDockWidget(Qt::RightDockWidgetArea, playPanel);
-            playPanel->setVisible(false);
-            playPanel->setFloating(false);
+
+            settings.beginGroup("MainWindow");
+            bool floatPanel = settings.value("floatPlayPanel").toBool();
+            settings.endGroup();
+
+            playPanel->setFloating(floatPanel);
+            restoreGeometry(playPanel);
             }
       }
 
@@ -3113,14 +3113,11 @@ void MuseScore::showPlayPanel(bool visible)
                   return;
 
             createPlayPanel();
-
-            // The play panel must be set visible before being set floating for positioning
-            // and window geometry reasons.
             playPanel->setVisible(visible);
-            playPanel->setFloating(false);
             }
       else
             reDisplayDockWidget(playPanel, visible);
+
       playId->setChecked(visible);
       }
 
@@ -3376,6 +3373,8 @@ void MuseScore::removeTab(int i)
             seq->stopWait();
             seq->setScoreView(0);
             }
+      if (score == mscore->getLastScoreSelection().score())
+            mscore->getLastScoreSelection().clear();
 
       int idx1      = tab1->currentIndex();
       bool firstTab = tab1->view(idx1) == cv;
@@ -4663,6 +4662,8 @@ void MuseScore::writeSettings()
       settings.beginGroup("MainWindow");
       settings.setValue("showPanel", paletteWidget && paletteWidget->isVisible());
       settings.setValue("showInspector", _inspector && _inspector->isVisible());
+      settings.setValue("showPlayPanel", playPanel && playPanel->isVisible());
+      settings.setValue("floatPlayPanel", playPanel && playPanel->isFloating());
       settings.setValue("showPianoKeyboard", _pianoTools && _pianoTools->isVisible());
       settings.setValue("showSelectionWindow", selectionWindow && selectionWindow->isVisible());
       settings.setValue("state", saveState());
@@ -4983,7 +4984,7 @@ void MuseScore::zoomBoxChanged(const ZoomIndex index, const qreal logicalLevel)
 
 void MuseScore::setZoom(const ZoomIndex index, const qreal logicalFreeZoomLevel/* = 0.0*/)
       {
-      zoomAndSavePrevious([=]() { cv->setLogicalZoom(index, cv->calculateLogicalZoomLevel(index, logicalFreeZoomLevel)); });
+      zoomAndSavePrevious([=, this]() { cv->setLogicalZoom(index, cv->calculateLogicalZoomLevel(index, logicalFreeZoomLevel)); });
       }
 
 //---------------------------------------------------------
@@ -5013,7 +5014,7 @@ void MuseScore::setZoomWithToggle(const ZoomIndex index)
 
 void MuseScore::zoomBySteps(const qreal numSteps)
       {
-      zoomAndSavePrevious([=]() { cv->zoomBySteps(numSteps); });
+      zoomAndSavePrevious([=, this]() { cv->zoomBySteps(numSteps); });
       }
 
 //---------------------------------------------------------
@@ -6311,6 +6312,14 @@ void MuseScore::cmd(QAction* a, const QString& cmd)
             importScore();
       else if (cmd == "file-export")
             showExportDialog();
+      else if (cmd == "file-reload") {
+            saveFile();
+            const auto ms = cs->masterScore();
+            const auto fi = ms->fileInfo();
+            const auto fn = fi->absoluteFilePath();
+            closeScore(cs);
+            openScore(fn);
+            }
       else if (cmd == "unroll-repeats")
             scoreUnrolled(cs->masterScore());
       else if (cmd == "quit")
@@ -8346,97 +8355,98 @@ void MuseScore::init(QStringList& argv)
             qApp->processEvents();
             }
 
-      mscore->showPlayPanel(preferences.getBool(PREF_UI_APP_STARTUP_SHOWPLAYPANEL));
       QSettings settings;
       if (settings.value("synthControlVisible", false).toBool())
             mscore->showSynthControl(true);
+
+      settings.beginGroup("MainWindow");
+      const bool forceShowPlayPanel = preferences.getBool(PREF_UI_APP_STARTUP_SHOWPLAYPANEL);
+      const bool lastSessionShowedPlayPanel = settings.value("showPlayPanel").toBool();
+      settings.endGroup();
+      mscore->showPlayPanel(forceShowPlayPanel || lastSessionShowedPlayPanel);
       }
 
 
 bool MuseScore::saveScoreParts(const QString& inFilePath, const QString& outFilePath)
-{
-    MasterScore* score = mscore->readScore(inFilePath);
-    if (!score) {
-        return false;
-    }
+      {
+      MasterScore* score = mscore->readScore(inFilePath);
+      if (!score)
+            return false;
 
-    if (!styleFile->isEmpty()) {
-        QFile f(*styleFile);
-        if (f.open(QIODevice::ReadOnly)) {
-            score->style().load(&f);
-        }
-    }
-    score->switchToPageMode();
+      if (!styleFile->isEmpty()) {
+            QFile f(*styleFile);
+            if (f.open(QIODevice::ReadOnly))
+                  score->style().load(&f);
+            }
+      score->switchToPageMode();
 
-    // if no parts, generate parts from existing instruments
-    if (score->excerpts().isEmpty()) {
-        auto excerpts = Excerpt::createAllExcerpt(score);
-        for (Excerpt* e : qAsConst(excerpts)) {
-              Score* nscore = new Score(e->oscore());
-              e->setPartScore(nscore);
-              nscore->style().set(Sid::createMultiMeasureRests, true);
-              auto excerptCmdFake = new AddExcerpt(e);
-              excerptCmdFake->redo(nullptr);
-              Excerpt::createExcerpt(e);
-        }
-    }
+      // if no parts, generate parts from existing instruments
+      if (score->excerpts().isEmpty()) {
+            auto excerpts = Excerpt::createAllExcerpt(score);
+            for (Excerpt*& e : excerpts) {
+                  Score* nscore = new Score(e->oscore());
+                  e->setPartScore(nscore);
+                  nscore->style().set(Sid::createMultiMeasureRests, true);
+                  auto excerptCmdFake = new AddExcerpt(e);
+                  excerptCmdFake->redo(nullptr);
+                  Excerpt::createExcerpt(e);
+                  }
+            }
 
-    QJsonArray partsObjList;
-    QJsonArray partsMetaList;
-    QJsonArray partsTitles;
+      QJsonArray partsObjList;
+      QJsonArray partsMetaList;
+      QJsonArray partsTitles;
 
-    for (Excerpt* excerpt : qAsConst(score->excerpts())) {
-        Score* part = excerpt->partScore();
-        QMap<QString, QString> partMetaTags = part->metaTags();
+      for (Excerpt*& excerpt : score->excerpts()) {
+            Score* part = excerpt->partScore();
+            QMap<QString, QString> partMetaTags = part->metaTags();
 
-        QJsonValue partTitle(part->title());
-        partsTitles << partTitle;
+            QJsonValue partTitle(part->title());
+            partsTitles << partTitle;
 
-        QVariantMap meta;
-        const QList<QString> keys;
-        for (const QString& key: keys) {
-            meta[key] = partMetaTags[key];
-        }
+            QVariantMap meta;
+            for (const QString& key: partMetaTags)
+                  meta[key] = partMetaTags[key];
 
-        QJsonValue partMetaObj = QJsonObject::fromVariantMap(meta);
-        partsMetaList << partMetaObj;
+            QJsonValue partMetaObj = QJsonObject::fromVariantMap(meta);
+            partsMetaList << partMetaObj;
 
-        QJsonValue partObj(QString::fromLatin1(exportMsczAsJSON(part)));
-        partsObjList << partObj;
-    }
+            QJsonValue partObj(QString::fromLatin1(exportMsczAsJSON(part)));
+            partsObjList << partObj;
+            }
 
-    QJsonObject json;
-    json["parts"] = partsTitles;
-    json["partsMeta"] = partsMetaList;
-    json["partsBin"] = partsObjList;
+      QJsonObject json;
+      json["parts"] = partsTitles;
+      json["partsMeta"] = partsMetaList;
+      json["partsBin"] = partsObjList;
 
-    QJsonDocument jsonDoc(json);
-    QFile out(outFilePath);
+      QJsonDocument jsonDoc(json);
+      QFile out(outFilePath);
 
-    bool res = out.open(QIODevice::WriteOnly);
-    if (res) {
-        out.write(jsonDoc.toJson(QJsonDocument::Compact));
-        out.close();
-    }
+      bool res = out.open(QIODevice::WriteOnly);
+      if (res) {
+            out.write(jsonDoc.toJson(QJsonDocument::Compact));
+            out.close();
+            }
 
-    delete score;
-    return res;
-}
+      delete score;
+      return res;
+      }
 
 QByteArray MuseScore::exportMsczAsJSON(Score* score)
-{
-    QBuffer buffer;
-    buffer.open(QIODevice::ReadWrite);
+      {
+      QBuffer buffer;
+      buffer.open(QIODevice::ReadWrite);
 
-    QString fileName = saveFilename(score->title()) + ".mscz";
-    score->saveCompressedFile(&buffer, fileName, false, true);
+      QString fileName = saveFilename(score->title()) + ".mscz";
+      score->saveCompressedFile(&buffer, fileName, false, true);
 
-    buffer.open(QIODevice::ReadOnly);
-    QByteArray scoreData = buffer.readAll();
-    buffer.close();
+      buffer.open(QIODevice::ReadOnly);
+      QByteArray scoreData = buffer.readAll();
+      buffer.close();
 
-    return scoreData.toBase64();
-}
+      return scoreData.toBase64();
+      }
 
 bool MuseScore::exportUnrolled(const QString& inFilePath)
 {

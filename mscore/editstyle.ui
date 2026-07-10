@@ -4023,13 +4023,13 @@ By default, they will be placed such as that their right end are at the same lev
         <item>
          <widget class="QGroupBox" name="keySigNaturalsGroup">
           <property name="title">
-           <string>♮ in Key Signatures</string>
+           <string>♮ in Key Signature Changes</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_35">
            <item>
             <widget class="QRadioButton" name="radioKeySigNatNone">
              <property name="text">
-              <string>Only for a change to C Maj / A min</string>
+              <string>Only for a change to C Major / A minor</string>
              </property>
             </widget>
            </item>
@@ -6084,16 +6084,16 @@ By default, they will be placed such as that their right end are at the same lev
                   <item row="0" column="1">
                    <widget class="QDoubleSpinBox" name="tupletMaxSlope">
                     <property name="suffix">
-                     <string extracomment="spatium unit">sp</string>
+                     <string notr="true">%</string>
                     </property>
                     <property name="maximum">
-                     <double>1.000000000000000</double>
+                     <double>100.000000000000000</double>
                     </property>
                     <property name="singleStep">
-                     <double>0.050000000000000</double>
+                     <double>5</double>
                     </property>
-                    <property name="value">
-                     <double>0.500000000000000</double>
+                    <property name="decimals">
+                     <number>0</number>
                     </property>
                    </widget>
                   </item>

@@ -687,7 +687,7 @@ PalettePanel* MuseScore::newRepeatsPalettePanel()
       sp->setDrawGrid(true);
 
       RepeatMeasure* rm = new RepeatMeasure(gscore);
-      sp->append(rm, qApp->translate("symUserNames", Sym::symUserNames[int(SymId::repeat1Bar)]));
+      sp->append(rm, qApp->translate("symUserNames", Sym::id2userName(SymId::repeat1Bar).toUtf8()));
 
       for (int i = 0; i < markerTypeTableSize(); i++) {
             if (markerTypeTable[i].type == Marker::Type::CODETTA) // not in SMuFL
@@ -758,12 +758,10 @@ PalettePanel* MuseScore::newBreaksPalettePanel()
       cell = sp->append(lb, QT_TRANSLATE_NOOP("Palette", "Section break"));
       cell->mag = 1.2;
 
-#if 0
       lb = new LayoutBreak(gscore);
       lb->setLayoutBreakType(LayoutBreak::Type::NOBREAK);
-      cell = sp->append(lb, QT_TRANSLATE_NOOP("Palette", "Don't break"));
+      cell = sp->append(lb, QT_TRANSLATE_NOOP("Palette", "Keep measures on the same system"));
       cell->mag = 1.2;
-#endif
 
       Spacer* spacer = new Spacer(gscore);
       spacer->setSpacerType(SpacerType::DOWN);
@@ -999,6 +997,9 @@ PalettePanel* MuseScore::newOrnamentsPalettePanel()
             SymId::ornamentTurnInverted,
             SymId::ornamentTurnSlash,
             SymId::ornamentTurn,
+            SymId::ornamentTurnUp,
+            SymId::ornamentHaydn,
+            SymId::ornamentTurnUpS,
             SymId::ornamentTrill,
             SymId::ornamentShortTrill,
             SymId::ornamentMordent,
@@ -1753,13 +1754,13 @@ PalettePanel* MuseScore::newTimePalettePanel()
             { 7,  8, TimeSigType::NORMAL, "7/8" },
             { 9,  8, TimeSigType::NORMAL, "9/8" },
             { 12, 8, TimeSigType::NORMAL, "12/8" },
-            { 4,  4, TimeSigType::FOUR_FOUR, qApp->translate("symUserNames", "Common time") },
-            { 2,  2, TimeSigType::ALLA_BREVE, qApp->translate("symUserNames", "Cut time") },
+            { 4,  4, TimeSigType::FOUR_FOUR, qApp->translate("symUserNames", Sym::id2userName(SymId::timeSigCommon).toUtf8()) },
+            { 2,  2, TimeSigType::ALLA_BREVE, qApp->translate("symUserNames", Sym::id2userName(SymId::timeSigCutCommon).toUtf8()) },
             { 2,  2, TimeSigType::NORMAL, "2/2" },
             { 3,  2, TimeSigType::NORMAL, "3/2" },
             { 4,  2, TimeSigType::NORMAL, "4/2" },
-            { 2,  2, TimeSigType::CUT_BACH, qApp->translate("symUserNames", "Cut time (Bach)") },
-            { 9,  8, TimeSigType::CUT_TRIPLE, qApp->translate("symUserNames", "Cut triple time (9/8)") },
+            { 2,  2, TimeSigType::CUT_BACH, qApp->translate("symUserNames", Sym::id2userName(SymId::timeSigCut2).toUtf8()) },
+            { 9,  8, TimeSigType::CUT_TRIPLE, qApp->translate("symUserNames", Sym::id2userName(SymId::timeSigCut3).toUtf8()) },
             };
 
       PalettePanel* sp = new PalettePanel(PalettePanel::Type::TimeSig);
@@ -1969,7 +1970,7 @@ void MuseScore::addTempo()
       Measure* m = tt->findMeasure();
       if (m && m->hasMMRest() && tt->links()) {
             Measure* mmRest = m->mmRest();
-            for (ScoreElement* se : *tt->links()) {
+            for (ScoreElement*& se : *tt->links()) {
                   TempoText* tt1 = toTempoText(se);
                   if (tt != tt1 && tt1->findMeasure() == mmRest) {
                         tt = tt1;
@@ -2000,13 +2001,13 @@ QMap<QString, QStringList>* smuflRanges()
                   qDebug("Json parse error in <%s>(offset: %d): %s", qPrintable(fi.fileName()),
                      error.offset, qPrintable(error.errorString()));
 
-            for (auto s : o.keys()) {
+            for (const auto& s : o.keys()) {
                   QJsonObject range = o.value(s).toObject();
                   QString desc      = range.value("description").toString();
                   QJsonArray glyphs = range.value("glyphs").toArray();
                   if (glyphs.size() > 0) {
                         QStringList glyphNames;
-                        for (QJsonValue g : glyphs)
+                        for (const QJsonValue& g : qAsConst(glyphs))
                               glyphNames.append(g.toString());
                         ranges.insert(desc, glyphNames);
                         allSymbols << glyphNames;

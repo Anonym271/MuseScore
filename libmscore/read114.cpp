@@ -274,7 +274,7 @@ static bool readTextProperties(XmlReader& e, TextBase* t, Element*)
       else if (tag == "foregroundColor")  // same as "color" ?
             e.skipCurrentElement();
       else if (tag == "frame") {
-            t->setFrameType(e.readBool() ? FrameType::SQUARE : FrameType::NO_FRAME);
+            t->setFrameType(e.readBool() ? FrameType::RECTANGLE : FrameType::NO_FRAME);
             t->setPropertyFlags(Pid::FRAME_TYPE, PropertyFlags::UNSTYLED);
             }
       else if (tag == "halign") {
@@ -583,7 +583,7 @@ static void readFingering114(XmlReader& e, Fingering* fing)
                         if (isStringNumber) //default value is circle for stringnumber, square is set in tag circle
                               fing->setFrameType(FrameType::CIRCLE);
                         else //default value is square for stringnumber, circle is set in tag circle
-                              fing->setFrameType(FrameType::SQUARE);
+                              fing->setFrameType(FrameType::RECTANGLE);
                   else
                         fing->setFrameType(FrameType::NO_FRAME);
                   }
@@ -592,7 +592,7 @@ static void readFingering114(XmlReader& e, Fingering* fing)
                   if (circle)
                         fing->setFrameType(FrameType::CIRCLE);
                   else
-                        fing->setFrameType(FrameType::SQUARE);
+                        fing->setFrameType(FrameType::RECTANGLE);
                   }
             else {
                   e.skipCurrentElement();
@@ -2989,14 +2989,10 @@ Score::FileError MasterScore::read114(XmlReader& e)
                         }
                   }
             else if (tag == "Excerpt") {
-                  if (MScore::noExcerpts)
-                        e.skipCurrentElement();
-                  else {
-                        Excerpt* ex = new Excerpt(this);
-                        ex->read(e);
-                        _excerpts.append(ex);
+                  Excerpt* ex = new Excerpt(this);
+                  ex->read(e);
+                  _excerpts.append(ex);
                         }
-                  }
             else if (tag == "Beam") {
                   Beam* beam = new Beam(this);
                   beam->read(e);
@@ -3237,16 +3233,16 @@ Score::FileError MasterScore::read114(XmlReader& e)
       QList<Excerpt*> readExcerpts;
       readExcerpts.swap(_excerpts);
       for (Excerpt* excerpt : readExcerpts) {
-            if (excerpt->parts().isEmpty())           // ignore empty parts
+            if (excerpt->parts().isEmpty()) {           // ignore empty parts
+                  delete excerpt;
                   continue;
-            if (!excerpt->parts().isEmpty()) {
-                  _excerpts.push_back(excerpt);
-                  Score* nscore = new Score(this);
-                  nscore->setEnableVerticalSpread(false);
-                  excerpt->setPartScore(nscore);
-                  nscore->style().set(Sid::createMultiMeasureRests, true);
-                  Excerpt::createExcerpt(excerpt);
                   }
+            _excerpts.push_back(excerpt);
+            Score* nscore = new Score(this);
+            nscore->setEnableVerticalSpread(false);
+            excerpt->setPartScore(nscore);
+            nscore->style().set(Sid::createMultiMeasureRests, true);
+            Excerpt::createExcerpt(excerpt);
             }
 
       // volta offsets in older scores are hardcoded to be relative to a voltaY of -2.0sp

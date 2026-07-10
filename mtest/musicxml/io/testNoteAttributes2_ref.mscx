@@ -5,6 +5,7 @@
     <currentLayer>0</currentLayer>
     <Division>480</Division>
     <Style>
+      <hideInstrumentNameIfOneInstrument>0</hideInstrumentNameIfOneInstrument>
       <Spatium>1.74978</Spatium>
       </Style>
     <showInvisible>1</showInvisible>
@@ -119,6 +120,7 @@
             </TimeSig>
           <Fermata>
             <subtype>fermataAbove</subtype>
+            <timeStretch>1</timeStretch>
             </Fermata>
           <Chord>
             <durationType>quarter</durationType>
@@ -130,6 +132,7 @@
             </Chord>
           <Fermata>
             <subtype>fermataBelow</subtype>
+            <timeStretch>1</timeStretch>
             <placement>below</placement>
             </Fermata>
           <Chord>
@@ -509,6 +512,7 @@
             </Chord>
           <Fermata>
             <subtype>fermataShortAbove</subtype>
+            <timeStretch>1</timeStretch>
             </Fermata>
           <Chord>
             <durationType>quarter</durationType>
@@ -520,6 +524,7 @@
             </Chord>
           <Fermata>
             <subtype>fermataLongAbove</subtype>
+            <timeStretch>1</timeStretch>
             </Fermata>
           <Chord>
             <durationType>quarter</durationType>

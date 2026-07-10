@@ -132,6 +132,16 @@ Shortcut Shortcut::_sc[] = {
          },
       {
          MsWidget::MAIN_WINDOW,
+         STATE_NORMAL | STATE_NOTE_ENTRY | STATE_EDIT | STATE_PLAY,
+         "file-reload",
+         QT_TRANSLATE_NOOP("action","Reload Current Score"),
+         QT_TRANSLATE_NOOP("action","File > Reload Current Score"),
+         QT_TRANSLATE_NOOP("action","Reload current score"),
+         Icons::fileReload_ICON,
+         Qt::ApplicationShortcut
+         },
+      {
+         MsWidget::MAIN_WINDOW,
          STATE_DISABLED | STATE_NORMAL | STATE_NOTE_ENTRY | STATE_EDIT | STATE_PLAY,
          "file-new",
          QT_TRANSLATE_NOOP("action","New…"),
@@ -343,8 +353,8 @@ Shortcut Shortcut::_sc[] = {
          MsWidget::MAIN_WINDOW,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "pitch-spell",
-         QT_TRANSLATE_NOOP("action","Respell Pitches"),
-         QT_TRANSLATE_NOOP("action","Respell pitches"),
+         QT_TRANSLATE_NOOP("action","&Optimize Enharmonic Spellings"),
+         QT_TRANSLATE_NOOP("action","Optimize enharmonic spellings"),
          0,
          Icons::Invalid_ICON,
          Qt::WindowShortcut
@@ -353,8 +363,8 @@ Shortcut Shortcut::_sc[] = {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY_STAFF_PITCHED | STATE_NOTE_ENTRY_STAFF_DRUM,
          "interval1",
-         QT_TRANSLATE_NOOP("action","Unison Above"),
-         QT_TRANSLATE_NOOP("action","Enter unison above")
+         QT_TRANSLATE_NOOP("action","Unison"),
+         QT_TRANSLATE_NOOP("action","Enter unison")
          },
       {
          MsWidget::SCORE_TAB,
@@ -415,6 +425,13 @@ Shortcut Shortcut::_sc[] = {
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY_STAFF_PITCHED | STATE_NOTE_ENTRY_STAFF_DRUM,
+         "interval10",
+         QT_TRANSLATE_NOOP("action","Tenth Above"),
+         QT_TRANSLATE_NOOP("action","Enter tenth above")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY_STAFF_PITCHED | STATE_NOTE_ENTRY_STAFF_DRUM,
          "interval-2",
          QT_TRANSLATE_NOOP("action","Second Below"),
          QT_TRANSLATE_NOOP("action","Enter second below")
@@ -467,6 +484,13 @@ Shortcut Shortcut::_sc[] = {
          "interval-9",
          QT_TRANSLATE_NOOP("action","Ninth Below"),
          QT_TRANSLATE_NOOP("action","Enter ninth below")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY_STAFF_PITCHED | STATE_NOTE_ENTRY_STAFF_DRUM,
+         "interval-10",
+         QT_TRANSLATE_NOOP("action","Tenth Below"),
+         QT_TRANSLATE_NOOP("action","Enter tenth below")
          },
       {
          MsWidget::SCORE_TAB,
@@ -2646,6 +2670,16 @@ Shortcut Shortcut::_sc[] = {
          },
       {
          MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "no-break",
+         QT_TRANSLATE_NOOP("action","Toggle Keep measures on the same system"),
+         QT_TRANSLATE_NOOP("action","Toggle 'Keep measures on the same system'"),
+         0,
+         Icons::Invalid_ICON,
+         Qt::WindowShortcut
+         },
+      {
+         MsWidget::SCORE_TAB,
          STATE_NORMAL,
          "edit-element",
          QT_TRANSLATE_NOOP("action","Edit Element"),
@@ -2964,7 +2998,7 @@ Shortcut Shortcut::_sc[] = {
          MsWidget::MAIN_WINDOW,
          STATE_NORMAL | STATE_NOTE_ENTRY_STAFF_PITCHED | STATE_NOTE_ENTRY_STAFF_DRUM,
          "enh-both",
-         QT_TRANSLATE_NOOP("action","Change Enharmonic Spelling (Both Modes)"),
+         QT_TRANSLATE_NOOP("action","Change Enharmonic Spelling (&Both Modes)"),
          QT_TRANSLATE_NOOP("action","Change enharmonic spelling (both modes)"),
          QT_TRANSLATE_NOOP("action","Change enharmonic note (alters the spelling in concert pitch and transposed mode)")
          },
@@ -2972,7 +3006,7 @@ Shortcut Shortcut::_sc[] = {
          MsWidget::MAIN_WINDOW,
          STATE_NORMAL | STATE_NOTE_ENTRY_STAFF_PITCHED | STATE_NOTE_ENTRY_STAFF_DRUM,
          "enh-current",
-         QT_TRANSLATE_NOOP("action","Change Enharmonic Spelling (Current Mode)"),
+         QT_TRANSLATE_NOOP("action","Change Enharmonic Spelling (&Current Mode)"),
          QT_TRANSLATE_NOOP("action","Change enharmonic spelling (current mode)"),
          QT_TRANSLATE_NOOP("action","Change enharmonic note (alters the spelling in the current mode only)")
          },
@@ -4275,10 +4309,11 @@ QString Shortcut::help() const
 Shortcut* Shortcut::getShortcut(const char* id)
       {
       Shortcut* s = _shortcuts.value(QByteArray(id));
-      if (s == 0) {
+      if (s == nullptr // shortcut not found
+          && !(!strcmp(id, "toggle-feedback")
+               || !strcmp(id, "toggle-insert-mode"))
+          ) // and not among the removed ones
             qDebug("Internal error: shortcut <%s> not found", id);
-            return 0;
-            }
       return s;
       }
 
@@ -4507,7 +4542,7 @@ void Shortcut::write(XmlWriter& xml) const
       xml.tag("key", _key.data());
       if (_standardKey != QKeySequence::UnknownKey)
             xml.tag("std", QString("%1").arg(_standardKey));
-      for (QKeySequence ks : _keys)
+      for (const QKeySequence& ks : _keys)
             xml.tag("seq", Shortcut::keySeqToString(ks, QKeySequence::PortableText, true));
       xml.etag();
       }
@@ -4572,8 +4607,12 @@ void Shortcut::load()
                                     if (tag == "key") {
                                           QString val(e.readElementText());
                                           sc = getShortcut(qPrintable(val));
-                                          if (!sc)
-                                                qDebug("cannot find shortcut <%s>", qPrintable(val));
+                                          if (!sc) { // shortcut not found
+                                                if (!(!strcmp(qPrintable(val), "toggle-feedback")
+                                                      || !strcmp(qPrintable(val), "toggle-insert-mode"))
+                                                    ) // and not among the removed ones
+                                                      qDebug("cannot find shortcut <%s>", qPrintable(val));
+                                                }
                                           else
                                                 sc->clear();
                                           }

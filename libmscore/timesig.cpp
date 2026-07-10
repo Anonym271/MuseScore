@@ -440,7 +440,7 @@ QVariant TimeSig::getProperty(Pid propertyId) const
       {
       switch (propertyId) {
             case Pid::SHOW_COURTESY:
-                  return int(showCourtesySig());
+                  return showCourtesySig();
             case Pid::NUMERATOR_STRING:
                   return numeratorString();
             case Pid::DENOMINATOR_STRING:
@@ -449,8 +449,6 @@ QVariant TimeSig::getProperty(Pid propertyId) const
                   return QVariant::fromValue(groups());
             case Pid::TIMESIG:
                   return QVariant::fromValue(_sig);
-            case Pid::TIMESIG_GLOBAL:
-                  return QVariant::fromValue(globalSig());
             case Pid::TIMESIG_STRETCH:
                   return QVariant::fromValue(stretch());
             case Pid::TIMESIG_TYPE:
@@ -486,9 +484,6 @@ bool TimeSig::setProperty(Pid propertyId, const QVariant& v)
             case Pid::TIMESIG:
                   setSig(v.value<Fraction>());
                   break;
-            case Pid::TIMESIG_GLOBAL:
-                  setGlobalSig(v.value<Fraction>());
-                  break;
             case Pid::TIMESIG_STRETCH:
                   setStretch(v.value<Fraction>());
                   break;
@@ -523,8 +518,6 @@ QVariant TimeSig::propertyDefault(Pid id) const
                   return QString();
             case Pid::TIMESIG:
                   return QVariant::fromValue(Fraction(4,4));
-            case Pid::TIMESIG_GLOBAL:
-                  return QVariant::fromValue(Fraction(1,1));
             case Pid::TIMESIG_TYPE:
                   return int(TimeSigType::NORMAL);
             case Pid::SCALE:
@@ -561,16 +554,16 @@ QString TimeSig::accessibleInfo() const
       QString timeSigString;
       switch (timeSigType()) {
             case TimeSigType::FOUR_FOUR:
-                  timeSigString = qApp->translate("symUserNames", "Common time");
+                  timeSigString = qApp->translate("symUserNames", Sym::id2userName(SymId::timeSigCommon).toUtf8());
                   break;
             case TimeSigType::ALLA_BREVE:
-                  timeSigString = qApp->translate("symUserNames", "Cut time");
+                  timeSigString = qApp->translate("symUserNames", Sym::id2userName(SymId::timeSigCutCommon).toUtf8());
                   break;
             case TimeSigType::CUT_BACH:
-                  timeSigString = qApp->translate("symUserNames", "Cut time (Bach)");
+                  timeSigString = qApp->translate("symUserNames", Sym::id2userName(SymId::timeSigCut2).toUtf8());
                   break;
             case TimeSigType::CUT_TRIPLE:
-                  timeSigString = qApp->translate("symUserNames", "Cut triple time (9/8)");
+                  timeSigString = qApp->translate("symUserNames", Sym::id2userName(SymId::timeSigCut3).toUtf8());
                   break;
             default:
                   timeSigString = QObject::tr("%1/%2 time").arg(QString::number(numerator()), QString::number(denominator()));

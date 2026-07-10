@@ -60,7 +60,7 @@ class Articulation;
 #define CONTROL_MODIFIER Qt::ControlModifier
 #endif
 
-enum class Grip : int;
+enum class Grip : signed char;
 enum class POS : char;
 enum class ZoomIndex : char;
 

@@ -245,7 +245,7 @@ endif (NOT MSVC)
 
 if (APPLE)
    if (XCODE)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -stdlib=libc++ -Wno-inconsistent-missing-override -Wno-deprecated-register")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -fPIC -stdlib=libc++ -Wno-inconsistent-missing-override -Wno-deprecated-register")
    else (XCODE)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -fPIC -stdlib=libc++ -Wno-inconsistent-missing-override -Wno-deprecated-register")
    endif (XCODE)
@@ -259,7 +259,7 @@ else (APPLE)
       if (BUILD_64 STREQUAL "ON")
          set(USE_SSE FALSE)
       endif(BUILD_64 STREQUAL "ON")
-   # Set compiler options for VS2017/19 toolchain.
+   # Set compiler options for VS2017/19/22 toolchain.
    # Note: /D_CRT_SECURE_NO WARNINGS disables warnings when using "non-secure" library functions like sscanf...
       set(CMAKE_CXX_FLAGS                "/MP /DWIN32 /D_WINDOWS /GR /EHsc /D_UNICODE /DUNICODE /D_CRT_SECURE_NO_WARNINGS /execution-charset:utf-8 /source-charset:utf-8")
       set(CMAKE_C_FLAGS                  "/MP /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS")
@@ -268,22 +268,31 @@ else (APPLE)
          set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /arch:SSE")
          set(CMAKE_C_FLAGS    "${CMAKE_C_FLAGS} /arch:SSE")
       endif (USE_SSE)
-      set(CMAKE_CXX_FLAGS_DEBUG          "/MT /permissive- /std:c++14 /W4 /Zi /Ob0 /Od /RTC1 /wd4996")
-      set(CMAKE_CXX_FLAGS_RELEASE        "/MT /permissive- /std:c++14 /W4 /O2 /Ob2 /DNDEBUG /DQT_NO_DEBUG /DQT_NO_DEBUG_OUTPUT")
-      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MT /permissive- /std:c++14 /W4 /Zi /O2 /Ob1 /DNDEBUG /DQT_NO_DEBUG /DQT_NO_DEBUG_OUTPUT /wd4996")
+      set(CMAKE_CXX_FLAGS_DEBUG          "/MT /permissive- /std:c++20 /Zc:__cplusplus /W4 /Zi /Ob0 /Od /RTC1 /wd4996")
+      set(CMAKE_CXX_FLAGS_RELEASE        "/MT /permissive- /std:c++20 /Zc:__cplusplus /W4 /O2 /Ob2 /DNDEBUG /DQT_NO_DEBUG /DQT_NO_DEBUG_OUTPUT")
+      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MT /permissive- /std:c++20 /Zc:__cplusplus /W4 /Zi /O2 /Ob1 /DNDEBUG /DQT_NO_DEBUG /DQT_NO_DEBUG_OUTPUT /wd4996")
       set(CMAKE_C_FLAGS_DEBUG            "/MT /W4 /Zi /Ob0 /Od /RTC1")
       set(CMAKE_C_FLAGS_RELEASE          "/MT /W4 /O2 /Ob2 /DNDEBUG")
       set(CMAKE_C_FLAGS_RELWITHDEBINFO   "/MT /W4 /Zi /O2 /Ob1 /DNDEBUG")
-      set(CMAKE_EXE_LINKER_FLAGS         "/DYNAMICBASE:NO")
+      if (BUILD_JACK)
+          set(CMAKE_EXE_LINKER_FLAGS     "/DYNAMICBASE:NO /NODEFAULTLIB:LIBCMT") # Disable ASLR
+      else (BUILD_JACK)
+          set(CMAKE_EXE_LINKER_FLAGS     "/NODEFAULTLIB:LIBCMT")
+      endif (BUILD_JACK)
    else (MSVC)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -D_UNICODE -DUNICODE")
       if (MINGW)
+         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -D_UNICODE -DUNICODE")
          # -mno-ms-bitfields see #22048
          set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -mno-ms-bitfields")
          if (NOT BUILD_64)
              set(CMAKE_EXE_LINKER_FLAGS "-Wl,--large-address-aware")
          endif (NOT BUILD_64)
       else (MINGW)
+         if (ARCH_TYPE=_x64)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -D_UNICODE -DUNICODE")
+         else (ARCH_TYPE=_x64) # arm*
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -D_UNICODE -DUNICODE")
+         endif (ARCH_TYPE=_x64)
          set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -fPIC")
          set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -Woverloaded-virtual")
          set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DQT_NO_DEBUG_OUTPUT")
@@ -389,7 +398,9 @@ if (USE_SYSTEM_FREETYPE)
       else (APPLE)
             find_package(Freetype REQUIRED)
       endif (APPLE)
-endif (USE_SYSTEM_FREETYPE)
+else()
+      add_subdirectory(thirdparty/freetype)
+endif()
 
 ##
 ## ALSA >= 1.0.0
@@ -706,19 +717,9 @@ if (NOT MINGW AND NOT MSVC AND NOT APPLE)
     # Install man pages in either compressed or uncompressed form
     install( FILES ${MAN_BUILD} DESTINATION share/man/man1 COMPONENT doc)
     # Create symlink alias for man pages so `man musescore` = `man mscore`
-    find_program( LN_EXECUTABLE ln DOC "A tool for creating symbolic link aliases (optional)." )
-    if (LN_EXECUTABLE)
-        message(STATUS "Found 'ln'. Symlink aliases will be created for MuseScore executable and the man pages.")
-        add_custom_command(
-            TARGET manpages
-            COMMAND echo "Creating symlink alias for man pages."
-            COMMAND ${LN_EXECUTABLE} -sf "${MAN_FULL_NAME}" "${MAN_FULL_ALIAS}"
-            COMMAND echo 'Symlink alias: ${MAN_FULL_ALIAS} -> ${MAN_FULL_NAME}'
-            )
-        install( FILES ${PROJECT_BINARY_DIR}/${MAN_FULL_ALIAS} DESTINATION share/man/man1 COMPONENT doc)
-     else (LN_EXECUTABLE)
-         message(STATUS "'ln' not found (it is optional). No symlink aliases will be created.")
-     endif (LN_EXECUTABLE)
+    install(CODE "message(STATUS \"Creating symlink \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/man/man1/${MAN_FULL_ALIAS} -> ${CMAKE_INSTALL_PREFIX}/share/man/man1/${MAN_FULL_NAME}\")
+                  execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink \"${CMAKE_INSTALL_PREFIX}/share/man/man1/${MAN_FULL_NAME}\" \"\$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/man/man1/${MAN_FULL_ALIAS}\")"
+            COMPONENT doc)
     # Add .MSCZ and .MSCX to MIME database (informs system that filetypes .MSCZ & .MSCX are MuseScore files)
     configure_file(build/Linux+BSD/musescore.xml.in musescore${MSCORE_INSTALL_SUFFIX}.xml)
     install( FILES ${PROJECT_BINARY_DIR}/musescore${MSCORE_INSTALL_SUFFIX}.xml DESTINATION share/mime/packages COMPONENT doc)
@@ -739,6 +740,7 @@ include_directories(
    ${VORBIS_INCDIR}
    ${SNDFILE_INCDIR}
    ${LAME_INCLUDE_DIR}
+   ${FREETYPE_INCLUDE_DIRS}
 )
 
 if (MSVC)
@@ -750,12 +752,6 @@ if (MSVC)
    include_directories(${PORTAUDIO_INCLUDE_DIR})
    include_directories(${OGG_INCLUDE_DIR})
 endif (MSVC)
-
-if (USE_SYSTEM_FREETYPE)
-      include_directories(${FREETYPE_INCLUDE_DIRS})
-else (USE_SYSTEM_FREETYPE)
-      include_directories(${PROJECT_SOURCE_DIR}/thirdparty/freetype/include)
-endif (USE_SYSTEM_FREETYPE)
 
 if (OMR)
  if (NOT USE_SYSTEM_POPPLER)
@@ -844,10 +840,6 @@ endif (OMR)
 if (OSC)
       add_subdirectory(thirdparty/ofqf)
 endif (OSC)
-
-if (NOT USE_SYSTEM_FREETYPE)
-      add_subdirectory(thirdparty/freetype)
-endif (NOT USE_SYSTEM_FREETYPE)
 
 ##
 ##  Include packaging

@@ -275,8 +275,9 @@ void PageSettings::orientationClicked()
 void PageSettings::on_resetPageStyleButton_clicked()
       {
       preview->score()->style().resetStyles(preview->score(), pageStyles());
-      pageOffsetEntry->setValue(1);
+      preview->score()->undoChangePageNumberOffset(0);
 
+      updateValues();
       updatePreview();
       }
 
@@ -544,7 +545,7 @@ void PageSettings::spatiumChanged(double val)
 
 void PageSettings::pageOffsetChanged(int val)
       {
-      preview->score()->setPageNumberOffset(val-1);
+      preview->score()->undoChangePageNumberOffset(val - 1);
       updatePreview();
       }
 

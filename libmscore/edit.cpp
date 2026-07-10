@@ -936,6 +936,13 @@ void Score::cmdRemoveTimeSig(TimeSig* ts)
       if (rs)
             rScore->undoRemoveElement(rs);
 
+      // Measure can contain mmRest that can have its own timesig. We need to delete it too
+      if (rm->mmRest()) {
+            Segment* mmRestTimesig = rm->mmRest()->findSegment(SegmentType::TimeSig, s->tick());
+            if (mmRestTimesig)
+                  rScore->undoRemoveElement(mmRestTimesig);
+            }
+
       Measure* pm = m->prevMeasure();
       Fraction ns(pm ? pm->timesig() : Fraction(4,4));
 
@@ -1053,7 +1060,7 @@ void Score::regroupNotesAndRests(const Fraction& startTick, const Fraction& endT
                   ChordRest* curr = seg->cr(track);
                   if (!curr)
                         continue; // this voice is empty here (CR overlaps with CR in other track)
-                  if (seg->tick() + curr->actualTicks() > maxTick)
+                  if (curr->endTick() > maxTick)
                         break; // outside range
                   if (curr->isRest() && !(curr->tuplet()) && !(toRest(curr)->isGap())) {
                         // combine consecutive rests
@@ -1062,28 +1069,28 @@ void Score::regroupNotesAndRests(const Fraction& startTick, const Fraction& endT
                               ChordRest* cr = s->cr(track);
                               if (!cr)
                                     continue; // this voice is empty here
-                              if (!cr->isRest() || s->tick() + cr->actualTicks() > maxTick || toRest(cr)->isGap())
+                              if (!cr->isRest() || cr->tuplet() || cr->endTick() > maxTick || toRest(cr)->isGap())
                                     break; // next element in the same voice is not a rest, or it exceeds the selection, or it is a gap
                               lastRest = cr;
                               }
-                        Fraction restTicks = lastRest->tick() + lastRest->ticks() - curr->tick();
+                        Fraction restTicks = (lastRest->endTick() - curr->tick()) * curr->staff()->timeStretch(curr->tick());
                         seg = setNoteRest(seg, curr->track(), NoteVal(), restTicks, Direction::AUTO, false, true);
                         }
                   else if (curr->isChord()) {
                         // combine tied chords
                         Chord* chord = toChord(curr);
                         Chord* lastTiedChord = chord;
-                        for (Chord* next = chord->nextTiedChord(); next && next->tick() + next->ticks() <= maxTick; next = next->nextTiedChord()) {
+                        for (Chord* next = chord->nextTiedChord(); next && next->endTick() <= maxTick; next = next->nextTiedChord()) {
                               lastTiedChord = next;
                               }
                         if (!lastTiedChord)
                               lastTiedChord = chord;
-                        Fraction noteTicks = lastTiedChord->tick() + lastTiedChord->ticks() - chord->tick();
+                        Fraction noteTicks = (lastTiedChord->endTick() - chord->tick()) * chord->staff()->timeStretch(chord->tick());
                         if (!(curr->tuplet())) {
                               // store start/end note for backward/forward ties ending/starting on the group of notes being rewritten
                               size_t numNotes = chord->notes().size();
-                              std::vector<Note *> tieBack(numNotes);
-                              std::vector<Note *> tieFor(numNotes);
+                              std::vector<Note*> tieBack(numNotes);
+                              std::vector<Note*> tieFor(numNotes);
                               for (size_t i = 0; i < numNotes; i++) {
                                     Note* n = chord->notes()[i];
                                     Note* nn = lastTiedChord->notes()[i];
@@ -1097,7 +1104,7 @@ void Score::regroupNotesAndRests(const Fraction& startTick, const Fraction& endT
                                           tieFor[i] = 0;
                                     }
                               Fraction tick = seg->tick();
-                              int tr        = chord->track();
+                              int tr = chord->track();
                               Fraction sd   = noteTicks;
                               std::vector<Tie*> ties;
                               Segment* segment = seg;
@@ -1105,11 +1112,17 @@ void Score::regroupNotesAndRests(const Fraction& startTick, const Fraction& endT
                               Chord* nchord = toChord(chord->clone());
                               for (size_t i = 0; i < numNotes; i++) { // strip ties from cloned chord
                                     Note* n = nchord->notes()[i];
-                                    n->setTieFor(0);
-                                    n->setTieBack(0);
+                                    if (Tie* tieFor2 = n->tieFor()) {
+                                          n->setTieFor(nullptr);
+                                          delete tieFor2;
+                                          }
+                                    if (Tie* tieBack2 = n->tieBack()) {
+                                          n->setTieBack(nullptr);
+                                          delete tieBack2;
+                                          }
                                     }
                               Chord* startChord = nchord;
-                              Measure* measure = 0;
+                              Measure* measure = nullptr;
                               bool firstpart = true;
                               for (;;) {
                                     if (tr % VOICES)
@@ -1131,7 +1144,7 @@ void Score::regroupNotesAndRests(const Fraction& startTick, const Fraction& endT
                                           nchord2->setTicks(d.fraction());
                                           std::vector<Note*> nl1 = nchord->notes();
                                           std::vector<Note*> nl2 = nchord2->notes();
-                                          if (!firstpart)
+                                          if (!firstpart) {
                                                 for (size_t j = 0; j < nl1.size(); ++j) {
                                                       Tie* tie = new Tie(this);
                                                       tie->setStartNote(nl1[j]);
@@ -1143,7 +1156,9 @@ void Score::regroupNotesAndRests(const Fraction& startTick, const Fraction& endT
                                                       nl2[j]->setTieBack(tie);
                                                       ties.push_back(tie);
                                                       }
+                                                }
                                           undoAddCR(nchord2, measure, tick);
+                                          segment = nchord2->segment();
                                           tick += nchord2->actualTicks();
                                           nchord = nchord2;
                                           firstpart = false;
@@ -1199,14 +1214,14 @@ void Score::regroupNotesAndRests(const Fraction& startTick, const Fraction& endT
                                           tie->setTick(tie->startNote()->tick());
                                           tie->setTick2(tie->endNote()->tick());
                                           tie->setTrack(track);
-                                          n->setTieFor(tie);
+                                          nn->setTieFor(tie);
                                           tieFor[i]->setTieBack(tie);
                                           ties.push_back(tie);
                                           }
                                     }
                               if (!ties.empty()) { // at least one tie was created
                                     for (Tie* tie : ties)
-                                        undoAddElement(tie);
+                                          undoAddElement(tie);
                                     connectTies();
                                     }
                               }
@@ -1265,6 +1280,7 @@ void Score::cmdAddTie(bool addToChord)
             if (noteEntryMode()) {
                   ChordRest* cr = nullptr;
                   Chord* c = note->chord();
+                  int staffMove = c->staffMove();
 
                   // set cursor at position after note
                   if (c->isGraceBefore()) {
@@ -1299,8 +1315,12 @@ void Score::cmdAddTie(bool addToChord)
 
                   // if no note to re-use, create one
                   NoteVal nval(note->noteVal());
-                  if (!n)
+                  if (!n) {
                         n = addPitch(nval, addFlag);
+                        if (staffMove) {
+                              undo(new ChangeChordStaffMove(n->chord(), staffMove));
+                              }
+                        }
                   else
                         select(n);
 
@@ -1329,6 +1349,11 @@ void Score::cmdAddTie(bool addToChord)
                                     note = nnote;
                                     _is.setLastSegment(_is.segment());
                                     nnote = addPitch(nval, true);
+                                    }
+                              }
+                        if (staffMove) {
+                              for (Note* tiedNote : n->tiedNotes()) {
+                                    undo(new ChangeChordStaffMove(tiedNote->chord(), staffMove));
                                     }
                               }
                         }
@@ -1602,7 +1627,7 @@ void Score::cmdFlip()
                || e->isBreath()) {
                   e->undoChangeProperty(Pid::AUTOPLACE, true);
                   // getProperty() delegates call from spannerSegment to Spanner
-                  Placement p = Placement(e->getProperty(Pid::PLACEMENT).toInt());
+                  Placement p = e->getProperty(Pid::PLACEMENT).value<Placement>();
                   p = (p == Placement::ABOVE) ? Placement::BELOW : Placement::ABOVE;
                   // TODO: undoChangeProperty() should probably do this directly
                   // see https://musescore.org/en/node/281432
@@ -3358,7 +3383,7 @@ void Score::localTimeDelete()
       MeasureBase* ie;
 
       if (endSegment)
-            ie = endSegment->prev(SegmentType::ChordRest) ? endSegment->measure() : endSegment->measure()->prev();
+            ie = endSegment->prev(SegmentType::ChordRest) ? endSegment->measure() : endSegment->measure()->prevMeasure();
       else
             ie = lastMeasure();
 
@@ -4150,9 +4175,7 @@ static Chord* findLinkedChord(Chord* c, Staff* nstaff)
       Segment* s  = c->segment();
       Measure* nm = nstaff->score()->tick2measure(s->tick());
       Segment* ns = nm->findSegment(s->segmentType(), s->tick());
-      if (!ns)
-            return 0;
-      Element* ne = ns->element(dtrack);
+      Element* ne = ns ? ns->element(dtrack) : nullptr;
       if (!ne || !ne->isChord())
             return 0;
       Chord* nc = toChord(ne);

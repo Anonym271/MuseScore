@@ -58,7 +58,7 @@ enum class PropertyFlags : char {
 //   Element Properties
 //------------------------------------------------------------------------
 
-enum class Pid {
+enum class Pid : short {
       SUBTYPE,
       SELECTED,
       GENERATED,
@@ -204,7 +204,6 @@ enum class Pid {
       ORNAMENT_STYLE,
 
       TIMESIG,
-      TIMESIG_GLOBAL,
       TIMESIG_STRETCH,
       TIMESIG_TYPE,
       SPANNER_TICK,

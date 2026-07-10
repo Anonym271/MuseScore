@@ -32,17 +32,16 @@ static const ElementName elementNames[] = {
       { ElementType::PART,                 "Part",                 QT_TRANSLATE_NOOP("elementName", "Part") },
       { ElementType::STAFF,                "Staff",                QT_TRANSLATE_NOOP("elementName", "Staff") },
       { ElementType::SCORE,                "Score",                QT_TRANSLATE_NOOP("elementName", "Score") },
-      { ElementType::SYMBOL,               "Symbol",               QT_TRANSLATE_NOOP("elementName", "Symbol") },
       { ElementType::TEXT,                 "Text",                 QT_TRANSLATE_NOOP("elementName", "Text") },
       { ElementType::LAYOUT_BREAK,         "LayoutBreak",          QT_TRANSLATE_NOOP("elementName", "Layout Break") },
       { ElementType::MEASURE_NUMBER,       "MeasureNumber",        QT_TRANSLATE_NOOP("elementName", "Measure Number") },
       { ElementType::MMREST_RANGE,         "MMRestRange",          QT_TRANSLATE_NOOP("elementName", "Multimeasure Rest Range") },
       { ElementType::INSTRUMENT_NAME,      "InstrumentName",       QT_TRANSLATE_NOOP("elementName", "Instrument Name") },
-      { ElementType::SLUR_SEGMENT,         "SlurSegment",          QT_TRANSLATE_NOOP("elementName", "Slur Segment") },
-      { ElementType::TIE_SEGMENT,          "TieSegment",           QT_TRANSLATE_NOOP("elementName", "Tie Segment") },
       { ElementType::BAR_LINE,             "BarLine",              QT_TRANSLATE_NOOP("elementName", "Barline") },
       { ElementType::STAFF_LINES,          "StaffLines",           QT_TRANSLATE_NOOP("elementName", "Staff Lines") },
       { ElementType::SYSTEM_DIVIDER,       "SystemDivider",        QT_TRANSLATE_NOOP("elementName", "System Divider") },
+      { ElementType::SLUR_SEGMENT,         "SlurSegment",          QT_TRANSLATE_NOOP("elementName", "Slur Segment") },
+      { ElementType::TIE_SEGMENT,          "TieSegment",           QT_TRANSLATE_NOOP("elementName", "Tie Segment") },
       { ElementType::STEM_SLASH,           "StemSlash",            QT_TRANSLATE_NOOP("elementName", "Stem Slash") },
       { ElementType::ARPEGGIO,             "Arpeggio",             QT_TRANSLATE_NOOP("elementName", "Arpeggio") },
       { ElementType::ACCIDENTAL,           "Accidental",           QT_TRANSLATE_NOOP("elementName", "Accidental") },
@@ -55,6 +54,7 @@ static const ElementName elementNames[] = {
       { ElementType::AMBITUS,              "Ambitus",              QT_TRANSLATE_NOOP("elementName", "Ambitus") },
       { ElementType::TIMESIG,              "TimeSig",              QT_TRANSLATE_NOOP("elementName", "Time Signature") },
       { ElementType::REST,                 "Rest",                 QT_TRANSLATE_NOOP("elementName", "Rest") },
+      { ElementType::SYMBOL,               "Symbol",               QT_TRANSLATE_NOOP("elementName", "Symbol") },
       { ElementType::BREATH,               "Breath",               QT_TRANSLATE_NOOP("elementName", "Breath") },
       { ElementType::REPEAT_MEASURE,       "RepeatMeasure",        QT_TRANSLATE_NOOP("elementName", "Repeat Measure") },
       { ElementType::TIE,                  "Tie",                  QT_TRANSLATE_NOOP("elementName", "Tie") },
@@ -394,11 +394,10 @@ bool ScoreElement::readProperty(const QStringRef& s, XmlReader& e, Pid id)
 //   writeProperty
 //
 //    - styled properties are never written
-//    - unstyled properties are always written regardless of value,
-//    - properties without style are written if different from default value
+//    - other properties are written if forced or if different from default value
 //-----------------------------------------------------------------------------
 
-void ScoreElement::writeProperty(XmlWriter& xml, Pid pid) const
+void ScoreElement::writeProperty(XmlWriter& xml, Pid pid, bool force) const
       {
       if (isStyled(pid))
             return;
@@ -407,8 +406,7 @@ void ScoreElement::writeProperty(XmlWriter& xml, Pid pid) const
             qDebug("%s invalid property %d <%s>", name(), int(pid), propertyName(pid));
             return;
             }
-      PropertyFlags f = propertyFlags(pid);
-      QVariant d = (f != PropertyFlags::STYLED) ? propertyDefault(pid) : QVariant();
+      QVariant d = force ? QVariant() : propertyDefault(pid);
 
       if (pid == Pid::FONT_STYLE) {
             FontStyle ds = FontStyle(d.isValid() ? d.toInt() : 0);

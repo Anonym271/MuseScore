@@ -98,6 +98,8 @@
 #include "volta.h"
 #include "xml.h"
 
+#include "mscore/preferences.h"
+
 namespace Ms {
 
 // extern bool showInvisible;
@@ -415,7 +417,9 @@ QColor Element::curColor(bool isVisible, QColor normalColor) const
             }
       if (selected() || marked ) {
             QColor originalColor;
-            if (track() == -1)
+            if (score()->selection().isComparison() && preferences.getBool(PREF_SCORE_COMPARISON_SELECTION_COLOR_ENABLED))
+                  originalColor = preferences.getColor(PREF_SCORE_COMPARISON_SELECTION_COLOR);
+            else if (track() == -1)
                   originalColor = MScore::selectColor[0];
             else
                   originalColor = MScore::selectColor[voice()];
@@ -1369,7 +1373,7 @@ QVariant Element::propertyDefault(Pid pid) const
                   QVariant v = ScoreElement::propertyDefault(pid);
                   if (v.isValid())
                         return v;
-                  return 0.0;
+                  return Spatium(0.0);
                   }
             case Pid::AUTOPLACE:
                   return true;
@@ -2408,7 +2412,7 @@ qreal Element::rebaseOffset(bool nox)
                   PropertyFlags pf = e->propertyFlags(Pid::PLACEMENT);
                   if (pf == PropertyFlags::STYLED)
                         pf = PropertyFlags::UNSTYLED;
-                  Placement place = above ? Placement::BELOW : Placement::ABOVE;
+                  const Placement place = above ? Placement::BELOW : Placement::ABOVE;
                   e->undoChangeProperty(Pid::PLACEMENT, int(place), pf);
                   undoResetProperty(Pid::MIN_DISTANCE);
                   // TODO
@@ -2447,12 +2451,12 @@ bool Element::rebaseMinDistance(qreal& md, qreal& yd, qreal sp, qreal rebase, bo
       qreal adjustedY = pos().y() + yd;
       qreal diff = _changedPos.y() - adjustedY;
       if (fix) {
-            undoChangeProperty(Pid::MIN_DISTANCE, -999.0, pf);
+            undoChangeProperty(Pid::MIN_DISTANCE, Spatium(-999.0), pf);
             yd = 0.0;
             }
       else if (!isStyled(Pid::MIN_DISTANCE)) {
             md = (above ? md + yd : md - yd) / sp;
-            undoChangeProperty(Pid::MIN_DISTANCE, md, pf);
+            undoChangeProperty(Pid::MIN_DISTANCE, Spatium(md), pf);
             yd += diff;
             }
       else {
@@ -2467,7 +2471,7 @@ bool Element::rebaseMinDistance(qreal& md, qreal& yd, qreal sp, qreal rebase, bo
                         p.ry() += rebase;
                         undoChangeProperty(Pid::OFFSET, p);
                         md = (above ? md - diff : md + diff) / sp;
-                        undoChangeProperty(Pid::MIN_DISTANCE, md, pf);
+                        undoChangeProperty(Pid::MIN_DISTANCE, Spatium(md), pf);
                         rc = true;
                         yd = 0.0;
                         }
@@ -2475,7 +2479,7 @@ bool Element::rebaseMinDistance(qreal& md, qreal& yd, qreal sp, qreal rebase, bo
             else {
                   // absolute movement (drag): fix unconditionally
                   md = (above ? md + yd : md - yd) / sp;
-                  undoChangeProperty(Pid::MIN_DISTANCE, md, pf);
+                  undoChangeProperty(Pid::MIN_DISTANCE, Spatium(md), pf);
                   yd = 0.0;
                   }
             }

@@ -427,7 +427,12 @@ void ScoreView::measurePopup(QContextMenuEvent* ev, Measure* obj)
       popup->addAction(getAction("cut"));
       popup->addAction(getAction("copy"));
       popup->addAction(getAction("paste"));
-      popup->addAction(getAction("paste-clone"));
+
+      // [Action: Paste Clone] option contingent upon an active selection
+      Selection& lastSelection = mscore->getLastScoreSelection();
+      if (!lastSelection.isNone())
+            popup->addAction(getAction("paste-clone"));
+
       popup->addAction(getAction("swap"));
       popup->addAction(getAction("delete"));
       popup->addAction(getAction("time-delete"));
@@ -2020,7 +2025,6 @@ void ScoreView::normalSwap()
                         _score->selection().dump();
                   if (!checkCopyOrCut())
                         return;
-                  ms = QApplication::clipboard()->mimeData();
                   }
             }
       QByteArray d(_score->selection().mimeData());
@@ -2085,7 +2089,7 @@ bool ScoreView::clonePaste()
       auto copiedSel = mscore->getLastScoreSelection();
       if (!copiedSel.isRange() && !copiedSel.isSingle()) {
             QMessageBox::warning(0, "MuseScore",
-                   tr("A valid range or single selection required for measure position."));
+                   tr("An active range/single source selection is required for cloning."));
             return false;
             }
       if (!srcScore) {
@@ -2426,9 +2430,9 @@ void ScoreView::cmd(const char* s)
                         mscore->selectElementDialog(e);
                         }
                   }},
-      //      {{"find"}, [](ScoreView* cv, const QByteArray&) {
-      //            ; // TODO:state         sm->postEvent(new CommandEvent(cmd));
-      //            }},
+            {{"find"}, [](ScoreView*, const QByteArray&) {
+                  ; // TODO:state         sm->postEvent(new CommandEvent(cmd));
+                  }},
             {{"scr-prev"}, [](ScoreView* cv, const QByteArray&) {
                   cv->screenPrev();
                   }},
@@ -2712,18 +2716,20 @@ void ScoreView::cmd(const char* s)
                   cv->cmdEnterRest(TDuration(TDuration::DurationType::V_EIGHTH));
                   }},
             {{"interval1",
-              "interval2", "interval-2",
-              "interval3", "interval-3",
-              "interval4", "interval-4",
-              "interval5", "interval-5",
-              "interval6", "interval-6",
-              "interval7", "interval-7",
-              "interval8", "interval-8",
-              "interval9", "interval-9"}, [](ScoreView* cv, const QByteArray& cmd) {
+              "interval2",  "interval-2",
+              "interval3",  "interval-3",
+              "interval4",  "interval-4",
+              "interval5",  "interval-5",
+              "interval6",  "interval-6",
+              "interval7",  "interval-7",
+              "interval8",  "interval-8",
+              "interval9",  "interval-9",
+              "interval10", "interval-10"}, [](ScoreView* cv, const QByteArray& cmd) {
                   int n = cmd.mid(8).toInt();
                   std::vector<Note*> nl;
                   if (cv->score()->selection().isRange()) {
-                        for (ChordRest* cr : cv->score()->getSelectedChordRests()) {
+                        const QSet<ChordRest *>crs = cv->score()->getSelectedChordRests();
+                        for (ChordRest* cr : crs) {
                               if (cr->isChord())
                                     nl.push_back(n > 0 ? toChord(cr)->upNote() : toChord(cr)->downNote());
                               }
@@ -4480,9 +4486,10 @@ void ScoreView::setControlCursorVisible(bool v)
 
 void ScoreView::cmdTuplet(int n, ChordRest* cr)
       {
-      if ((cr->durationType() < TDuration(TDuration::DurationType::V_512TH) && cr->durationType() != TDuration(TDuration::DurationType::V_MEASURE))
-          || (cr->durationType() < TDuration(TDuration::DurationType::V_256TH) && n > 3)
-          || (cr->durationType() < TDuration(TDuration::DurationType::V_128TH) && n > 7)
+      if (cr->durationType() != TDuration(TDuration::DurationType::V_MEASURE) &&
+          ((cr->durationType() < TDuration(TDuration::DurationType::V_512TH)) ||
+           (cr->durationType() < TDuration(TDuration::DurationType::V_256TH) && n > 3) ||
+           (cr->durationType() < TDuration(TDuration::DurationType::V_128TH) && n > 7))
           ) {
             mscore->noteTooShortForTupletDialog();
             return;
@@ -4572,11 +4579,13 @@ void ScoreView::changeVoice(int voice)
             // treat as command to move notes to another voice
             score()->changeVoice(voice);
             // modify the input state only if the command was successful
-            for (ChordRest* cr : score()->getSelectedChordRests())
+            const QSet<ChordRest *>crs = score()->getSelectedChordRests();
+            for (ChordRest* cr : crs) {
                   if (cr->voice() == voice) {
                         is->setTrack(track);
                         break;
                         }
+                  }
             }
       }
 
@@ -4596,7 +4605,8 @@ void ScoreView::cmdTuplet(int n)
                   }
             }
       else {
-            for (ChordRest* cr : _score->getSelectedChordRests()) {
+            const QSet<ChordRest *>crs = score()->getSelectedChordRests();
+            for (ChordRest* cr : crs) {
                   if (!cr->isGrace()) {
                         cmdTuplet(n, cr);
                         }
@@ -5056,18 +5066,31 @@ void ScoreView::cmdRepeatSelection()
 
       if (noteEntryMode() && selection.isSingle()) {
             Element* el = _score->selection().element();
-            while (el && el->type() != ElementType::NOTE)
-                   el = el->prevSegmentElement();
-            if (el && el->type() == ElementType::NOTE && !_score->inputState().endOfScore()) {
-                  _score->startCmd();
-                  bool addTo = false;
-                  Chord* c = toNote(el)->chord();
-                  for (Note* note : c->notes()) {
-                        NoteVal nval = note->noteVal();
-                        _score->addPitch(nval, addTo);
-                        addTo = true;
+            if (el && !_score->inputState().endOfScore()) {
+                  Chord* c = nullptr;
+                  if (el->type() == ElementType::NOTE)
+                        c = toNote(el)->chord();
+                  else if (el->type() == ElementType::REST) {
+                        Segment* prevSegment = toRest(el)->segment()->prev1WithElemsOnTrack(el->track());
+
+                        // Looking for the previous Chord
+                        while (prevSegment) {
+                              if (prevSegment->elementAt(el->track())->isChord()) {
+                                    c = toChord(prevSegment->elementAt(el->track()));
+                                    break;
+                                    }
+                              else
+                                    prevSegment = prevSegment->prev1WithElemsOnTrack(el->track());
+                              }
                         }
-                  _score->endCmd();
+                  if (c) {
+                        _score->startCmd();
+                        for (Note* note : c->notes()) {
+                              NoteVal nval = note->noteVal();
+                              _score->addPitch(nval, note != c->notes()[0]);
+                              }
+                        _score->endCmd();
+                        }
                   }
             return;
             }
@@ -5112,9 +5135,11 @@ void ScoreView::cmdRepeatSelection()
                   _score->pasteStaff(xml, cr->segment(), cr->staffIdx());
                   _score->endCmd();
                   }
-            else qDebug("cmdRepeatSelection: cannot paste: endSegment: %p dStaff %d", endSegment, dStaff);
+            else
+                  qDebug("cmdRepeatSelection: cannot paste: endSegment: %p dStaff %d", endSegment, dStaff);
             }
-      else qDebug() << "cmdRepeatSelection: no end segment";
+      else
+            qDebug() << "cmdRepeatSelection: no end segment";
       }
 
 //---------------------------------------------------------
@@ -5616,6 +5641,8 @@ void ScoreView::updateEditElement()
                   else {
                         setEditElement(nullptr);
                         }
+                  break;
+            case SelState::COMPARISON:
                   break;
             }
       }

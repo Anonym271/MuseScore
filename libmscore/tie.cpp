@@ -128,8 +128,6 @@ void TieSegment::changeAnchor(EditData& ed, Element* element)
             const std::vector<SpannerSegment*>& ss = spanner()->spannerSegments();
 
             TieSegment* newSegment = toTieSegment(ed.curGrip == Grip::END ? ss.back() : ss.front());
-            score()->endCmd();
-            score()->startCmd();
             ed.view->startEdit(newSegment, ed.curGrip);
             triggerLayout();
             }
@@ -189,6 +187,8 @@ void TieSegment::editDrag(EditData& ed)
             setAutoAdjust(0.0, 0.0);
             roffset() += offset;
             }
+
+      triggerLayout();
       }
 
 //---------------------------------------------------------
@@ -737,7 +737,6 @@ void Tie::slurPos(SlurPos* sp)
 
       //------p2
       y2 = y1;
-      xo = 0;
       if (!ec) {
             sp->p2 = sp->p1 + QPointF(_spatium * 3, 0.0);
             sp->system2 = sp->system1;
@@ -766,6 +765,11 @@ void Tie::slurPos(SlurPos* sp)
                   }
             }
       sp->p2 += QPointF(x2 - xo, y2);
+
+      if (sc->isGrace())
+            sp->p1 += sc->parent()->pos();
+      if (ec->isGrace())
+            sp->p2 += ec->parent()->pos();
 
       // adjust for cross-staff
       if (sc->vStaffIdx() != vStaffIdx() && sp->system1) {
@@ -816,29 +820,37 @@ static int compareNotesPos(const Note* n1, const Note* n2)
 
 void Tie::calculateDirection()
       {
-      Chord* c1   = startNote()->chord();
-      Chord* c2   = endNote()->chord();
-      Measure* m1 = c1->measure();
-      Measure* m2 = c2->measure();
+      if (!startNote() && !endNote()) {
+          return;
+      }
+      const bool tieHasBothNotes = startNote() && endNote();
+
+      const Note* primaryNote = startNote() ? startNote() : endNote();
+      const Chord* primaryChord = primaryNote->chord();
+      const Measure* primaryMeasure = primaryChord->measure();
+
+      const Note* secondaryNote = tieHasBothNotes ? endNote() : nullptr;
+      const Chord* secondaryChord = secondaryNote ? secondaryNote->chord() : nullptr;
+      const Measure* secondaryMeasure = secondaryChord ? secondaryChord->measure() : nullptr;
 
       if (_slurDirection == Direction::AUTO) {
-            std::vector<Note*> notes = c1->notes();
+            std::vector<Note*> notes = primaryChord->notes();
             size_t n = notes.size();
             // if there are multiple voices, the tie direction goes on stem side
-            if (m1->hasVoices(c1->staffIdx(), c1->tick(), c1->actualTicks()))
-                  _up = c1->up();
-            else if (m2->hasVoices(c2->staffIdx(), c2->tick(), c2->actualTicks()))
-                _up = c2->up();
-            else if (n == 1) {
+            if (primaryMeasure->hasVoices(primaryChord->staffIdx(), primaryChord->tick(), primaryChord->actualTicks()))
+                  _up = primaryChord->up();
+            else if (tieHasBothNotes && secondaryMeasure && secondaryMeasure->hasVoices(secondaryChord->staffIdx(), secondaryChord->tick(), secondaryChord->actualTicks()))
+                  _up = secondaryChord->up();
+            else if (n == 1 && secondaryChord) {
                   //
                   // single note
                   //
-                  if (c1->up() != c2->up()) {
+                  if (tieHasBothNotes && primaryChord->up() != secondaryChord->up()) {
                         // if stem direction is mixed, always up
                         _up = true;
                         }
                   else
-                        _up = !c1->up();
+                        _up = !primaryChord->up();
                   }
             else {
                   //
@@ -895,22 +907,22 @@ void Tie::calculateDirection()
                         if (tiesAbove == 0 && tiesBelow == 0 && unisonTies == 0) {
                               // this is the only tie in the chord.
                               if (notesAbove == notesBelow)
-                                    _up = !c1->up();
+                                    _up = !primaryChord->up();
                               else
                                     _up = (notesAbove < notesBelow);
                               }
                         else if (tiesAbove == tiesBelow)
                               // this note is dead center, so its tie should go counter to the stem direction
-                              _up = !c1->up();
+                              _up = !primaryChord->up();
                         else
                               _up = (tiesAbove < tiesBelow);
                         }
-                  else if (pivotPoint == startNote())
+                  else if (pivotPoint == primaryNote)
                         // the current note is the lower of the only second or unison in the chord; tie goes down.
                         _up = false;
                   else {
                         // if lower than the pivot, tie goes down, otherwise up
-                        int noteDiff = compareNotesPos(startNote(), pivotPoint);
+                        int noteDiff = compareNotesPos(primaryNote, pivotPoint);
                         _up = (noteDiff >= 0);
                         }
                   }

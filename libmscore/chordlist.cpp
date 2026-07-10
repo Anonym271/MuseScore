@@ -452,7 +452,7 @@ void ParsedChord::configure(const ChordList* cl)
       // TODO: allow this to be parameterized via chord list
       major << "ma" << "maj" << "major" << "t" << "^";
       minor << "mi" << "min" << "minor" << "-" << "=";
-      diminished << "dim" << "o";
+      diminished << "dim" << "dim." << "o";
       augmented << "aug" << "+";
       lower << "b" << "-" << "dim";
       raise << "#" << "+" << "aug";
@@ -625,8 +625,8 @@ bool ParsedChord::parse(const QString& s, const ChordList* cl, bool syntaxOnly, 
       firstLeadingToken = _tokenList.size();
       while (i < len && leading.contains(s[i]))
             addToken(QString(s[i++]),ChordTokenClass::EXTENSION);
-#endif
       lastLeadingToken = _tokenList.size();
+#endif
       // get extension - up to first non-digit other than comma or slash
       for (tok1 = ""; i < len; ++i) {
             if (!s[i].isDigit() && s[i] != ',' && s[i] != '/')
@@ -967,7 +967,7 @@ bool ParsedChord::parse(const QString& s, const ChordList* cl, bool syntaxOnly, 
                                     _xmlKind = "suspended-fourth";
                               else if (tok2L == "2")
                                     _xmlKind = "suspended-second";
-                              _xmlText = tok1 + tok2;
+                              _xmlText = tok1L + tok2;
                               }
                         else {
                               _xmlDegrees += "sub3";
@@ -981,7 +981,7 @@ bool ParsedChord::parse(const QString& s, const ChordList* cl, bool syntaxOnly, 
                               _xmlKind = "suspended-fourth";
                         else if (tok2L == "2")
                               _xmlKind = "suspended-second";
-                        _xmlText = tok1 + tok2;
+                        _xmlText = tok1L + tok2;
                         if (_extension == "7" || _extension == "9" || _extension == "11" || _extension == "13") {
                               _xmlDegrees += (_quality == "major") ? "add#7" : "add7";
                               // hack for programs that cannot assemble names well
@@ -1243,6 +1243,11 @@ QString ParsedChord::fromXml(const QString& rawKind, const QString& rawKindText,
             _quality = "major";
             implied = true;
             extension = 5;
+            }
+      else if (kind == "pedal") {
+            // Ignore, assume major
+            _quality = "major";
+            implied = true;
             }
       else
             _quality = kind;

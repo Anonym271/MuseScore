@@ -434,7 +434,7 @@ void FretDiagram::draw(QPainter* painter) const
                   painter->rotate(90);
                   if (_numPos == 0) {
                         painter->drawText(QRectF(.0, stringDist * (_strings - 1), .0, .0),
-                           Qt::AlignLeft|Qt::TextDontClip, text);
+                           static_cast<int>(Qt::AlignLeft)|static_cast<int>(Qt::TextDontClip), text);
                         }
                   else {
                         painter->drawText(QRectF(.0, .0, .0, .0),
@@ -514,7 +514,7 @@ void FretDiagram::layoutHorizontal()
 
       // We need to get the width of the notehead/rest in order to position the fret diagram correctly
       Segment* pSeg = toSegment(parent());
-      qreal noteheadWidth = 0;
+      qreal noteheadWidth = 0.0;
       if (pSeg->isChordRestType()) {
             int idx = staff()->idx();
             for (Element* e = pSeg->firstElementOfSegment(pSeg, idx); e; e = pSeg->nextElementOfSegment(pSeg, e, idx)) {
@@ -536,6 +536,12 @@ void FretDiagram::layoutHorizontal()
             mainWidth = stringDist * (_strings - 1);
       else if (_orientation == Orientation::HORIZONTAL)
             mainWidth = fretDist * (_frets + 0.5);
+
+      if (qFuzzyIsNull(noteheadWidth)) {
+            // If note or rest not found, use standard notehead width
+            noteheadWidth = symWidth(SymId::noteheadBlack);
+            }
+
       setPos((noteheadWidth - mainWidth)/2, -(bbox().height() + styleP(Sid::fretY)));
       }
 

@@ -19,11 +19,11 @@
 */
 
 #include "element.h"
-#include "symbol.h"
+#include "key.h"
 #include "noteevent.h"
 #include "pitchspelling.h"
 #include "shape.h"
-#include "key.h"
+#include "symbol.h"
 #include "sym.h"
 
 namespace Ms {
@@ -42,7 +42,7 @@ class NoteDot;
 class Spanner;
 class StaffType;
 class NoteEditData;
-enum class AccidentalType;
+enum class AccidentalType : unsigned char;
 
 static const int MAX_DOTS = 4;
 
@@ -111,11 +111,20 @@ class NoteHead final : public Symbol {
             HEAD_TI_FUNK,
 
             HEAD_DO_NAME,
+            HEAD_DI_NAME,
+            HEAD_RA_NAME,
             HEAD_RE_NAME,
+            HEAD_RI_NAME,
+            HEAD_ME_NAME,
             HEAD_MI_NAME,
             HEAD_FA_NAME,
+            HEAD_FI_NAME,
+            HEAD_SE_NAME,
             HEAD_SOL_NAME,
+            HEAD_LE_NAME,
             HEAD_LA_NAME,
+            HEAD_LI_NAME,
+            HEAD_TE_NAME,
             HEAD_TI_NAME,
             HEAD_SI_NAME,
 
@@ -523,7 +532,7 @@ class Note final : public Element {
       Element* prevInEl(Element* e);
       Element* nextElement() override;
       Element* prevElement() override;
-      virtual Element* lastElementBeforeSegment();
+      Element* lastElementBeforeSegment();
       Element* nextSegmentElement() override;
       Element* prevSegmentElement() override;
 

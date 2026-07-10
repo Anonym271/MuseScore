@@ -12,6 +12,8 @@ win32install
 win64build
 win64install
 build.xcode
+muse
+muse_deps
 applebuild
 build.artifacts
 MuseScorePortable
@@ -55,7 +57,7 @@ SF_VERSION
 /msvc.*
 
 # Created/used during (master) build
-src/
-SetupConfigure.local.cmake
-builds/
-build_overrides.cmake
+/src/
+/SetupConfigure.local.cmake
+/builds/
+/build_overrides.cmake

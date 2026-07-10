@@ -35,7 +35,7 @@
         "tupletBracketThickness": 0.1
     },
     "fontName": "Leland",
-    "fontVersion": "0.78",
+    "fontVersion": "0.80",
     "glyphBBoxes": {
         "4stringTabClef": {
             "bBoxNE": [
@@ -1183,7 +1183,7 @@
                 1.684
             ],
             "bBoxSW": [
-                -0.544,
+                -0.548,
                 -0.772
             ]
         },
@@ -1377,9 +1377,19 @@
                 -0.772
             ]
         },
+        "dynamicSforzandoFF": {
+            "bBoxNE": [
+                3.284,
+                1.688
+            ],
+            "bBoxSW": [
+                0.0,
+                -0.784
+            ]
+        },
         "dynamicSforzandoPianissimo": {
             "bBoxNE": [
-                4.524,
+                4.552,
                 1.684
             ],
             "bBoxSW": [
@@ -1389,7 +1399,7 @@
         },
         "dynamicSforzandoPiano": {
             "bBoxNE": [
-                3.228,
+                3.256,
                 1.684
             ],
             "bBoxSW": [
@@ -2299,11 +2309,11 @@
         },
         "keyboardPedalD": {
             "bBoxNE": [
-                1.405,
+                1.409,
                 1.859
             ],
             "bBoxSW": [
-                -0.001,
+                0.003,
                 -0.036
             ]
         },
@@ -2319,27 +2329,57 @@
         },
         "keyboardPedalE": {
             "bBoxNE": [
-                0.908,
+                0.912,
                 1.268
             ],
             "bBoxSW": [
-                -0.002,
+                0.002,
                 -0.028
             ]
         },
         "keyboardPedalP": {
             "bBoxNE": [
-                1.801,
+                1.805,
                 2.181
             ],
             "bBoxSW": [
-                -0.0,
+                0.004,
                 -0.038
+            ]
+        },
+        "keyboardPedalParensLeft": {
+            "bBoxNE": [
+                0.552,
+                2.328
+            ],
+            "bBoxSW": [
+                0.0,
+                -0.242
+            ]
+        },
+        "keyboardPedalParensRight": {
+            "bBoxNE": [
+                0.552,
+                2.328
+            ],
+            "bBoxSW": [
+                0.0,
+                -0.242
             ]
         },
         "keyboardPedalPed": {
             "bBoxNE": [
                 3.924,
+                2.18
+            ],
+            "bBoxSW": [
+                0.0,
+                -0.039
+            ]
+        },
+        "keyboardPedalPedNoDot": {
+            "bBoxNE": [
+                3.512,
                 2.18
             ],
             "bBoxSW": [
@@ -2827,6 +2867,16 @@
                 -0.532
             ]
         },
+        "noteheadHalfFilled": {
+            "bBoxNE": [
+                1.3,
+                0.528
+            ],
+            "bBoxSW": [
+                0.0,
+                -0.532
+            ]
+        },
         "noteheadMoonBlack": {
             "bBoxNE": [
                 1.24,
@@ -3088,6 +3138,16 @@
             ]
         },
         "noteheadWhole": {
+            "bBoxNE": [
+                1.492,
+                0.544
+            ],
+            "bBoxSW": [
+                0.0,
+                -0.536
+            ]
+        },
+        "noteheadWholeFilled": {
             "bBoxNE": [
                 1.492,
                 0.544
@@ -4830,11 +4890,11 @@
         "wiggleArpeggiatoDownArrow": {
             "bBoxNE": [
                 1.132,
-                1.036
+                1.04
             ],
             "bBoxSW": [
                 0.0,
-                -0.336
+                -0.332
             ]
         },
         "wiggleArpeggiatoUp": {
@@ -5017,6 +5077,14 @@
                 }
             ]
         },
+        "keyboardPedalPed": {
+            "alternates": [
+                {
+                    "codepoint": "U+F434",
+                    "name": "keyboardPedalPedNoDot"
+                }
+            ]
+        },
         "noteDoubleWhole": {
             "alternates": [
                 {
@@ -5036,120 +5104,120 @@
         "timeSig0": {
             "alternates": [
                 {
-                    "codepoint": "U+F440",
-                    "name": "timeSig0Large"
-                },
-                {
                     "codepoint": "U+F506",
                     "name": "timeSig0Narrow"
+                },
+                {
+                    "codepoint": "U+F440",
+                    "name": "timeSig0Large"
                 }
             ]
         },
         "timeSig1": {
             "alternates": [
                 {
-                    "codepoint": "U+F441",
-                    "name": "timeSig1Large"
-                },
-                {
                     "codepoint": "U+F507",
                     "name": "timeSig1Narrow"
+                },
+                {
+                    "codepoint": "U+F441",
+                    "name": "timeSig1Large"
                 }
             ]
         },
         "timeSig2": {
             "alternates": [
                 {
-                    "codepoint": "U+F442",
-                    "name": "timeSig2Large"
-                },
-                {
                     "codepoint": "U+F508",
                     "name": "timeSig2Narrow"
+                },
+                {
+                    "codepoint": "U+F442",
+                    "name": "timeSig2Large"
                 }
             ]
         },
         "timeSig3": {
             "alternates": [
                 {
-                    "codepoint": "U+F443",
-                    "name": "timeSig3Large"
-                },
-                {
                     "codepoint": "U+F509",
                     "name": "timeSig3Narrow"
+                },
+                {
+                    "codepoint": "U+F443",
+                    "name": "timeSig3Large"
                 }
             ]
         },
         "timeSig4": {
             "alternates": [
                 {
-                    "codepoint": "U+F444",
-                    "name": "timeSig4Large"
-                },
-                {
                     "codepoint": "U+F50A",
                     "name": "timeSig4Narrow"
+                },
+                {
+                    "codepoint": "U+F444",
+                    "name": "timeSig4Large"
                 }
             ]
         },
         "timeSig5": {
             "alternates": [
                 {
-                    "codepoint": "U+F445",
-                    "name": "timeSig5Large"
-                },
-                {
                     "codepoint": "U+F50B",
                     "name": "timeSig5Narrow"
+                },
+                {
+                    "codepoint": "U+F445",
+                    "name": "timeSig5Large"
                 }
             ]
         },
         "timeSig6": {
             "alternates": [
                 {
-                    "codepoint": "U+F446",
-                    "name": "timeSig6Large"
-                },
-                {
                     "codepoint": "U+F50C",
                     "name": "timeSig6Narrow"
+                },
+                {
+                    "codepoint": "U+F446",
+                    "name": "timeSig6Large"
                 }
             ]
         },
         "timeSig7": {
             "alternates": [
                 {
-                    "codepoint": "U+F447",
-                    "name": "timeSig7Large"
-                },
-                {
                     "codepoint": "U+F50D",
                     "name": "timeSig7Narrow"
+                },
+                {
+                    "codepoint": "U+F447",
+                    "name": "timeSig7Large"
                 }
             ]
         },
         "timeSig8": {
             "alternates": [
                 {
-                    "codepoint": "U+F448",
-                    "name": "timeSig8Large"
-                },
-                {
                     "codepoint": "U+F50E",
                     "name": "timeSig8Narrow"
+                },
+                {
+                    "codepoint": "U+F448",
+                    "name": "timeSig8Large"
                 }
             ]
         },
         "timeSig9": {
             "alternates": [
                 {
-                    "codepoint": "U+F449",
-                    "name": "timeSig9Large"
-                },
-                {
                     "codepoint": "U+F50F",
                     "name": "timeSig9Narrow"
+                },
+                {
+                    "codepoint": "U+F449",
+                    "name": "timeSig9Large"
                 }
             ]
         }
@@ -5390,10 +5458,6 @@
             ]
         },
         "accidentalQuarterToneFlatStein": {
-            "cutOutNE": [
-                0.18,
-                0.64
-            ],
             "cutOutNW": [
                 0.62,
                 0.624
@@ -5729,7 +5793,7 @@
         },
         "dynamicFortePiano": {
             "cutOutNE": [
-                1.34,
+                1.336,
                 1.052
             ],
             "cutOutNW": [
@@ -5951,6 +6015,24 @@
                 0.0
             ]
         },
+        "dynamicSforzandoFF": {
+            "cutOutNW": [
+                1.284,
+                1.056
+            ],
+            "cutOutSE": [
+                2.348,
+                -0.008
+            ],
+            "cutOutSW": [
+                0.384,
+                -0.02
+            ],
+            "opticalCenter": [
+                1.968,
+                0.0
+            ]
+        },
         "dynamicSforzandoPianissimo": {
             "cutOutNE": [
                 2.268,
@@ -5961,7 +6043,7 @@
                 1.056
             ],
             "cutOutSE": [
-                3.772,
+                3.8,
                 -0.088
             ],
             "cutOutSW": [
@@ -5983,8 +6065,8 @@
                 1.056
             ],
             "cutOutSE": [
-                2.476,
-                -0.072
+                2.504,
+                -0.088
             ],
             "cutOutSW": [
                 0.384,
@@ -6595,6 +6677,32 @@
                 0.16
             ]
         },
+        "noteheadHalfFilled": {
+            "cutOutNE": [
+                1.184,
+                0.42
+            ],
+            "cutOutNW": [
+                0.272,
+                0.312
+            ],
+            "cutOutSE": [
+                1.072,
+                -0.284
+            ],
+            "cutOutSW": [
+                0.156,
+                -0.456
+            ],
+            "stemDownNW": [
+                0.0,
+                -0.168
+            ],
+            "stemUpSE": [
+                1.3,
+                0.16
+            ]
+        },
         "noteheadMoonBlack": {
             "stemDownNW": [
                 0.0,
@@ -6814,12 +6922,30 @@
                 0.2,
                 0.4
             ],
+            "cutOutSE": [
+                1.284,
+                -0.4
+            ],
             "cutOutSW": [
                 0.212,
                 -0.4
+            ]
+        },
+        "noteheadWholeFilled": {
+            "cutOutNE": [
+                1.296,
+                0.4
             ],
-            "stemUpSE": [
+            "cutOutNW": [
+                0.2,
+                0.4
+            ],
+            "cutOutSE": [
                 1.284,
+                -0.4
+            ],
+            "cutOutSW": [
+                0.212,
                 -0.4
             ]
         },
@@ -6903,6 +7029,25 @@
                 "accidentalParensRight"
             ],
             "description": "Parenthesised sharp"
+        },
+        "keyboardPedalPed": {
+            "codepoint": "U+E650",
+            "componentGlyphs": [
+                "keyboardPedalP",
+                "keyboardPedalE",
+                "keyboardPedalD",
+                "keyboardPedalDot"
+            ],
+            "description": "Pedal mark"
+        },
+        "keyboardPedalPedNoDot": {
+            "codepoint": "U+F434",
+            "componentGlyphs": [
+                "keyboardPedalP",
+                "keyboardPedalE",
+                "keyboardPedalD"
+            ],
+            "description": "Pedal mark (no dot)"
         }
     },
     "optionalGlyphs": {

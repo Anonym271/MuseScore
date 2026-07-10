@@ -467,6 +467,7 @@ MasterScore* MuseScore::readScore(const QString& name)
                         score->setMovements(new Movements());
                         score->setStyle(MScore::baseStyle());
                         rv = Ms::readScore(score, name, true);
+                        score->setCreated(true); // force save as for imported files
                         }
                   else
                         rv = Score::FileError::FILE_NO_ERROR;
@@ -745,7 +746,7 @@ MasterScore* MuseScore::getNewFile()
             if (i == 0)
                   tick = Fraction(0,1);
             QList<Rest*> puRests;
-            for (Score* _score : score->scoreList()) {
+            for (Score*& _score : score->scoreList()) {
                   Rest* rest = 0;
                   Measure* measure = new Measure(_score);
                   measure->setTimesig(timesig);
@@ -1827,7 +1828,6 @@ void MuseScore::printFile()
       printerDev.setFullPage(true);
       if (!printerDev.setPageMargins(QMarginsF()))
             qDebug("unable to clear printer margins");
-      printerDev.setColorMode(QPrinter::Color);
       if (cs->isMaster())
             printerDev.setDocName(cs->masterScore()->fileInfo()->completeBaseName());
       else
@@ -1971,8 +1971,8 @@ bool MuseScore::saveAs(Score* cs_, bool saveCopy, const QString& path, const QSt
             // save as compressed MusicXML *.mxl file
             rv = saveMxl(cs_, fn);
             }
-      else if ((ext == "mid") || (ext == "midi")) {
-            // save as midi file *.mid resp. *.midi
+      else if ((ext == "mid") || (ext == "midi")  || (ext == "kar")) {
+            // save as midi file *.mid resp. *.midi resp. *.kar
             rv = saveMidi(cs_, fn);
             }
       else if (ext == "pdf") {
@@ -2412,7 +2412,7 @@ Score::FileError readScore(MasterScore* score, QString name, bool ignoreVersionE
             }
       score->rebuildMidiMapping();
       score->setSoloMute();
-      for (Score* s : score->scoreList()) {
+      for (Score*& s : score->scoreList()) {
             s->setPlaylistDirty();
             s->addLayoutFlags(LayoutFlag::FIX_PITCH_VELO);
             s->setLayoutAll();
@@ -3060,7 +3060,7 @@ bool MuseScore::saveSvg(Score* score, QIODevice* device, int pageNumber, bool dr
 
       int lastNoteIndex = -1;
       for (int i = 0; i < pageNumber; ++i) {
-            for (const Element* element : score->pages()[i]->elements()) {
+            for (Element*& element : score->pages()[i]->elements()) {
                   if (element->type() == ElementType::NOTE) {
                         lastNoteIndex++;
                         }

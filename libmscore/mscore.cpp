@@ -97,7 +97,6 @@ int     MScore::division    = 480; // 3840;   // pulses per quarter note (PPQ) /
 int     MScore::sampleRate  = 44100;
 int     MScore::mtcType;
 
-bool    MScore::noExcerpts = false;
 bool    MScore::noImages = false;
 bool    MScore::pdfPrinting = false;
 bool    MScore::svgPrinting = false;
@@ -353,7 +352,7 @@ void MScore::init()
             ":/fonts/leland/LelandText.otf",
             ":/fonts/bravura/BravuraText.otf",
             ":/fonts/gootville/GootvilleText.otf",
-            ":/fonts/mscore/MScoreText.ttf",
+            ":/fonts/mscore/MScoreText.otf",
             ":/fonts/petaluma/PetalumaText.otf",
             ":/fonts/petaluma/PetalumaScript.otf",
             ":/fonts/finalemaestro/FinaleMaestroText.otf",

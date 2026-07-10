@@ -305,8 +305,7 @@ void HairpinSegment::layout()
                   rypos() += yd;
                   }
 
-            if (hairpin()->addToSkyline() && !hairpin()->lineVisible()
-                && !hairpin()->diagonal()) {
+            if (hairpin()->addToSkyline() && !hairpin()->diagonal()) {
                   // align dynamics with hairpin
                   if (sd && sd->autoplace() && sd->placement() == hairpin()->placement()
                       && (hairpin()->lineVisible() || !_text->empty())){
@@ -487,17 +486,19 @@ void HairpinSegment::draw(QPainter* painter) const
 
 Element* HairpinSegment::propertyDelegate(Pid pid)
       {
-      if (pid == Pid::HAIRPIN_TYPE
-         || pid == Pid::VELO_CHANGE
-         || pid == Pid::VELO_CHANGE_METHOD
-         || pid == Pid::SINGLE_NOTE_DYNAMICS
-         || pid == Pid::HAIRPIN_CIRCLEDTIP
-         || pid == Pid::HAIRPIN_HEIGHT
-         || pid == Pid::HAIRPIN_CONT_HEIGHT
-         || pid == Pid::DYNAMIC_RANGE
-         || pid == Pid::LINE_STYLE
-            )
-            return spanner();
+      switch (pid) {
+            case Pid::DYNAMIC_RANGE:
+            case Pid::HAIRPIN_CIRCLEDTIP:
+            case Pid::HAIRPIN_CONT_HEIGHT:
+            case Pid::HAIRPIN_HEIGHT:
+            case Pid::HAIRPIN_TYPE:
+            case Pid::LINE_STYLE:
+            case Pid::SINGLE_NOTE_DYNAMICS:
+            case Pid::VELO_CHANGE:
+            case Pid::VELO_CHANGE_METHOD:
+                  return spanner();
+            default: break;
+            }
       return TextLineBaseSegment::propertyDelegate(pid);
       }
 
@@ -676,6 +677,8 @@ void Hairpin::write(XmlWriter& xml) const
       writeProperty(xml, Pid::DYNAMIC_RANGE);
       writeProperty(xml, Pid::SINGLE_NOTE_DYNAMICS);
       writeProperty(xml, Pid::VELO_CHANGE_METHOD);
+      writeProperty(xml, Pid::HAIRPIN_HEIGHT);
+      writeProperty(xml, Pid::HAIRPIN_CONT_HEIGHT);
       writeProperty(xml, Pid::PLACEMENT);
 
       TextLineBase::writeProperties(xml);

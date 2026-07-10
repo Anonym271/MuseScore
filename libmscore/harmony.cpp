@@ -315,10 +315,14 @@ void Harmony::read(XmlReader& e)
       {
       while (e.readNextStartElement()) {
             const QStringRef& tag(e.name());
-            if (tag == "base")
+            if (tag == "base"
+             || tag == "bass") // Mu4.6+ compatibility
                   setBaseTpc(e.readInt());
-            else if (tag == "baseCase")
+            else if (tag == "baseCase"
+                  || tag == "bassCase") // Mu4.6+ compatibility
                   _baseCase = static_cast<NoteCaseType>(e.readInt());
+            else if (tag == "harmonyInfo") // Mu 4.6+ copmpatibility
+                  Harmony::read(e); // recur into this method here, to read bass, extension, name and root
             else if (tag == "extension")
                   setId(e.readInt());
             else if (tag == "name")
@@ -913,7 +917,7 @@ void Harmony::endEdit(EditData& ed)
 
 void Harmony::setHarmony(const QString& s)
       {
-      int r, b;
+      int r = Tpc::TPC_INVALID, b = Tpc::TPC_INVALID;
       const ChordDescription* cd = parseHarmony(s, &r, &b);
       if (!cd && _parsedForm && _parsedForm->parseable()) {
             // our first time encountering this chord
@@ -1375,7 +1379,7 @@ QPoint Harmony::calculateBoundingRect()
       {
       const qreal        ypos = (placeBelow() && staff()) ? staff()->height() : 0.0;
       const FretDiagram* fd   = (parent() && parent()->isFretDiagram()) ? toFretDiagram(parent()) : nullptr;
-      const qreal        cw   = symWidth(SymId::noteheadBlack);
+      const qreal        standardNoteWidth = symWidth(SymId::noteheadBlack);
       qreal              newx = 0.0;
       qreal              newy = 0.0;
 
@@ -1394,9 +1398,9 @@ QPoint Harmony::calculateBoundingRect()
                   }
             else {
                   if (align() & Align::RIGHT)
-                        xx = cw;
+                        xx = standardNoteWidth;
                   else if (align() & Align::HCENTER)
-                        xx = cw / 2.0;
+                        xx = standardNoteWidth / 2.0;
                   yy = ypos - ((align() & Align::BOTTOM) ? _harmonyHeight - bbox().height() : 0.0);
                   }
 
@@ -1428,9 +1432,9 @@ QPoint Harmony::calculateBoundingRect()
                   }
             else {
                   if (align() & Align::RIGHT)
-                        xx = -bb.x() -bb.width() + cw;
+                        xx = -bb.x() -bb.width() + standardNoteWidth;
                   else if (align() & Align::HCENTER)
-                        xx = -bb.x() -bb.width() / 2.0 + cw / 2.0;
+                        xx = -bb.x() -bb.width() / 2.0 + standardNoteWidth / 2.0;
 
                   newx = 0.0;
                   newy = ypos;

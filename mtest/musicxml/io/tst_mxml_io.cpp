@@ -11,13 +11,13 @@
 //=============================================================================
 
 #include <QtTest/QtTest>
-#include "mtest/testutils.h"
 #include "libmscore/score.h"
-#include "mscore/preferences.h"
 // start includes required for fixupScore()
 #include "libmscore/measure.h"
 #include "libmscore/staff.h"
 // end includes required for fixupScore()
+#include "mscore/preferences.h"
+#include "mtest/testutils.h"
 
 namespace Ms {
 extern bool saveMxl(Score*, const QString&);
@@ -64,8 +64,10 @@ private slots:
       void articulationCombination() { mxmlIoTestRef("testArticulationCombination"); }
       void backupRoundingError() { mxmlImportTestRef("testBackupRoundingError"); }
       void barlineFermatas() { mxmlIoTest("testBarlineFermatas"); }
+      //void barlineJump() { mxmlImportTestRef("testBarlineJump"); }
       void barlineLoc() { mxmlImportTestRef("testBarlineLoc"); }
       void barlineSpan() { mxmlIoTest("testBarlineSpan"); }
+      void barlineTips() { mxmlIoTest("testBarlineTips"); }
       void barlinesGrandStaff1() { mxmlImportTestRef("testBarlinesGrandStaff"); }
       void barlinesGrandStaff2() { mxmlIoTest("testBarlinesGrandStaff"); }
       void barStyles() { mxmlIoTest("testBarStyles"); }
@@ -97,9 +99,9 @@ private slots:
       void colorExport() { mxmlMscxExportTestRef("testColorExport"); }
       void colors() { mxmlIoTest("testColors"); }
       void completeMeasureRests() { mxmlIoTest("testCompleteMeasureRests"); }
-      void copyrightScale() { mxmlImportTestRef("testCopyrightScale"); }
       void connectedArpeggios1() { mxmlImportTestRef("testConnectedArpeggios"); }
       void connectedArpeggios2() { mxmlIoTestRef("testConnectedArpeggios"); }
+      void copyrightScale() { mxmlImportTestRef("testCopyrightScale"); }
       void cueGraceNotes1() { mxmlImportTestRef("testCueGraceNotes"); }
       void cueGraceNotes2() { mxmlIoTestRef("testCueGraceNotes"); }
       void cueNotes() { mxmlIoTest("testCueNotes"); }
@@ -152,7 +154,8 @@ private slots:
       void grace2() { mxmlIoTest("testGrace2"); }
       void grace3() { mxmlIoTest("testGrace3"); }
       void hairpinDynamics() { mxmlMscxExportTestRef("testHairpinDynamics"); }
-      void handbells() { mxmlIoTest("testHandbells"); }
+      void handbells1() { mxmlIoTest("testHandbells1"); }
+      // void handbells2() { mxmlIoTest("testHandbells2"); } //TODO
       void harmony1() { mxmlIoTest("testHarmony1"); }
       void harmony2() { mxmlIoTest("testHarmony2"); }
       void harmony3() { mxmlIoTest("testHarmony3"); }
@@ -161,7 +164,7 @@ private slots:
       void harmony6() { mxmlMscxExportTestRef("testHarmony6"); }
       void harmony7() { mxmlMscxExportTestRef("testHarmony7"); }
       void harmony8() { mxmlIoTest("testHarmony8"); }
-      void harmony9() { mxmlIoTest("testHarmony9"); }
+      void harmony9() { mxmlIoTest("testHarmony9"); } // chordnames without chordrest
       void harmonMutes() { mxmlIoTest("testHarmonMutes"); }
       void hello() { mxmlIoTest("testHello"); }
       void helloReadCompr() { mxmlReadTestCompr("testHello"); }
@@ -177,19 +180,21 @@ private slots:
       void inferredCrescLines2() { mxmlImportTestRef("testInferredCrescLines2"); }
       void inferredDynamics() { mxmlImportTestRef("testInferredDynamics"); }
       void inferredDynamicsExpressiont() { mxmlImportTestRef("testInferredDynamicsExpression"); }
-      void inferreFractions() { mxmlImportTestRef("testInferFraction"); }
       void inferredFingerings() { mxmlImportTestRef("testInferredFingerings"); }
+      void inferredFractions() { mxmlImportTestRef("testInferredFraction"); }
       void inferredRights() { mxmlImportTestRef("testInferredRights"); }
       void inferredTempoText() { mxmlImportTestRef("testInferredTempoText"); }
       void inferredTempoText2() { mxmlImportTestRef("testInferredTempoText2"); }
-      void inferredTransposition() { mxmlImportTestRef("testInferredRights"); }
+      void inferredTransposition() { mxmlImportTestRef("testInferredTransposition"); }
       void instrumentChangeMIDIportExport() { mxmlMscxExportTestRef("testInstrumentChangeMIDIportExport"); }
       void instrumentSound() { mxmlIoTestRef("testInstrumentSound"); }
       void invalidLayout() { mxmlMscxExportTestRef("testInvalidLayout"); }
       void invalidTimesig() { mxmlIoTestRef("testInvalidTimesig"); }
-      void invisibleDirection() { mxmlIoTest("testInvisibleDirection"); }
       void invisibleElements() { mxmlIoTest("testInvisibleElements"); }
       void invisibleNote() { mxmlMscxExportTestRef("testInvisibleNote"); }
+      void invisibleNotations1() { mxmlIoTest("testInvisibleNotations1"); }
+      void invisibleNotations2() { mxmlIoTest("testInvisibleNotations2"); }
+      void invisibleTempo() { mxmlIoTest("testInvisibleTempo"); }
       void keysig1() { mxmlIoTest("testKeysig1"); }
       void keysig2() { mxmlIoTest("testKeysig2"); }
       void layoutCleanup1() { mxmlImportTestRef("testLayoutCleanup1"); }
@@ -221,10 +226,12 @@ private slots:
       void lyricExtensions2() { mxmlImportTestRef("testLyricExtensions"); }
       void lyricExtensions3() { mxmlIoTest("testLyricExtension2"); }
       void lyricExtensions4() { mxmlImportTestRef("testLyricExtension2"); }
+      void lyricsNorwegianOSlash() { mxmlImportTestRef("testLyricsNorwegianOSlash"); }
       void lyricPos() { mxmlImportTestRef("testLyricPos"); }
       void lyrics1() { mxmlIoTestRef("testLyrics1"); }
       void lyricsVoice2a() { mxmlIoTest("testLyricsVoice2a"); }
       void lyricsVoice2b() { mxmlIoTestRef("testLyricsVoice2b"); }
+      void lyricVisibility() { mxmlImportTestRef("testLyricVisibility"); }
       void maxNumberLevel() { mxmlMscxExportTestRef("testMaxNumberLevel"); }
       void measureLength() { mxmlIoTestRef("testMeasureLength"); }
       void measureNumbers() { mxmlIoTest("testMeasureNumbers"); }
@@ -247,10 +254,12 @@ private slots:
       void nonStandardKeySig3() { mxmlIoTest("testNonStandardKeySig3"); }
       void nonUniqueThings() { mxmlIoTestRef("testNonUniqueThings"); }
       void noteAttributes1() { mxmlIoTest("testNoteAttributes1"); }
-      void noteAttributes2() { mxmlIoTestRef("testNoteAttributes2"); }
+      void noteAttributes2Import() { mxmlImportTestRef("testNoteAttributes2"); }
+      void noteAttributes2io() { mxmlIoTestRef("testNoteAttributes2"); }
       void noteAttributes3() { mxmlIoTest("testNoteAttributes3"); }
-      void noteAttributes4() { mxmlImportTestRef("testNoteAttributes2"); }
       void noteColor() { mxmlIoTest("testNoteColor"); }
+      void noteDynamics() { mxmlImportTestRef("testNoteDynamics"); }
+      void noteheadNames() { mxmlIoTest("testNoteheadNames"); }
       void noteheadParentheses() { mxmlIoTest("testNoteheadParentheses"); }
       void noteheads() { mxmlIoTest("testNoteheads"); }
       void noteheads2() { mxmlMscxExportTestRef("testNoteheads2"); }
@@ -262,6 +271,10 @@ private slots:
       void numerals() { mxmlIoTest("testNumerals"); }
       void ornaments() { mxmlIoTest("testOrnaments"); }
       void overlappingSpanners() { mxmlIoTest("testOverlappingSpanners"); }
+      void pageNumbers1() { mxmlMscxExportTestRefBreaks("testPageNumbers1"); }
+      void pageNumbers2() { mxmlMscxExportTestRefBreaks("testPageNumbers2"); }
+      void pageNumbers3() { mxmlMscxExportTestRefBreaks("testPageNumbers3"); }
+      void pageNumbers4() { mxmlMscxExportTestRefBreaks("testPageNumbers4"); }
       void partNames() { mxmlImportTestRef("testPartNames"); }
       void partNames2() { mxmlIoTest("testPartNames2"); }
       void pedalChanges() { mxmlIoTest("testPedalChanges"); }
@@ -288,6 +301,7 @@ private slots:
       void staffSize() { mxmlIoTest("testStaffSize"); }
       void staffTwoKeySigs() { mxmlIoTest("testStaffTwoKeySigs"); }
       void stringData()      { mxmlIoTest("testStringData"); }
+      void stringMute() { mxmlImportTestRef("testStringmute"); }
       void stringVoiceName() { mxmlIoTestRef("testStringVoiceName"); }
       void swing() { mxmlIoTest("testSwing"); }
       void systemBrackets1() { mxmlIoTest("testSystemBrackets1"); }
@@ -303,6 +317,7 @@ private slots:
       void tablature3() { mxmlIoTest("testTablature3"); }
       void tablature4() { mxmlIoTest("testTablature4"); }
       void tablature5() { mxmlIoTestRef("testTablature5"); }
+      void tabs() { mxmlMscxExportTestRef("testTabs"); }
       void tboxAboveBelow1() { mxmlMscxExportTestRef("testTboxAboveBelow1"); }
       void tboxAboveBelow2() { mxmlMscxExportTestRef("testTboxAboveBelow2"); }
       void tboxAboveBelow3() { mxmlMscxExportTestRef("testTboxAboveBelow3"); }
@@ -331,6 +346,7 @@ private slots:
       void timesig1() { mxmlIoTest("testTimesig1"); }
       void timesig3() { mxmlIoTest("testTimesig3"); }
       void timesig4() { mxmlIoTest("testTimesig4"); }
+      void timesig5() { mxmlMscxExportTestRef("testTimesig5"); }
       void titleSwapMu() {mxmlImportTestRef("testTitleSwapMu"); }
       void titleSwapSib() { mxmlImportTestRef("testTitleSwapSib"); }
       void trackHandling() { mxmlIoTest("testTrackHandling"); }
@@ -410,7 +426,7 @@ void TestMxmlIO::mxmlIoTest(const char* file, bool exportLayout)
       preferences.setCustomPreference<MusicxmlExportBreaks>(PREF_EXPORT_MUSICXML_EXPORTBREAKS, MusicxmlExportBreaks::MANUAL);
       preferences.setPreference(PREF_IMPORT_MUSICXML_IMPORTBREAKS, true);
       preferences.setPreference(PREF_EXPORT_MUSICXML_EXPORTLAYOUT, exportLayout);
-      preferences.setPreference(PREF_EXPORT_MUSICXML_EXPORTINVISIBLEELEMENTS, true);
+      preferences.setPreference(PREF_EXPORT_MUSICXML_EXPORTINVISIBLEELEMENTS, false);
       preferences.setPreference(PREF_IMPORT_MUSICXML_IMPORTINFERTEXTTYPE, true);
       MasterScore* score = readScore(DIR + file + ".xml");
       QVERIFY(score);
@@ -462,14 +478,14 @@ void TestMxmlIO::mxmlIoTestRefBreaks(const char* file)
       fixupScore(score);
       score->doLayout();
       preferences.setCustomPreference<MusicxmlExportBreaks>(PREF_EXPORT_MUSICXML_EXPORTBREAKS, MusicxmlExportBreaks::NO);
-      QVERIFY(saveMusicXml(score, QString(file) + ".xml"));
-      QVERIFY(saveCompareMusicXmlScore(score, QString(file) + ".xml", DIR + file + "_no_ref.xml"));
+      QVERIFY(saveMusicXml(score, QString(file) + "_no.xml"));
+      QVERIFY(saveCompareMusicXmlScore(score, QString(file) + "_no.xml", DIR + file + "_no_ref.xml"));
       preferences.setCustomPreference<MusicxmlExportBreaks>(PREF_EXPORT_MUSICXML_EXPORTBREAKS, MusicxmlExportBreaks::MANUAL);
-      QVERIFY(saveMusicXml(score, QString(file) + ".xml"));
-      QVERIFY(saveCompareMusicXmlScore(score, QString(file) + ".xml", DIR + file + "_manual_ref.xml"));
+      QVERIFY(saveMusicXml(score, QString(file) + "_manual.xml"));
+      QVERIFY(saveCompareMusicXmlScore(score, QString(file) + "_manual.xml", DIR + file + "_manual_ref.xml"));
       preferences.setCustomPreference<MusicxmlExportBreaks>(PREF_EXPORT_MUSICXML_EXPORTBREAKS, MusicxmlExportBreaks::ALL);
-      QVERIFY(saveMusicXml(score, QString(file) + ".xml"));
-      QVERIFY(saveCompareMusicXmlScore(score, QString(file) + ".xml", DIR + file + "_all_ref.xml"));
+      QVERIFY(saveMusicXml(score, QString(file) + "_all.xml"));
+      QVERIFY(saveCompareMusicXmlScore(score, QString(file) + "_all.xml", DIR + file + "_all_ref.xml"));
       delete score;
       }
 
@@ -513,14 +529,14 @@ void TestMxmlIO::mxmlMscxExportTestRefBreaks(const char* file)
       fixupScore(score);
       score->doLayout();
       preferences.setCustomPreference<MusicxmlExportBreaks>(PREF_EXPORT_MUSICXML_EXPORTBREAKS, MusicxmlExportBreaks::NO);
-      QVERIFY(saveMusicXml(score, QString(file) + ".xml"));
-      QVERIFY(saveCompareMusicXmlScore(score, QString(file) + ".xml", DIR + file + "_no_ref.xml"));
+      QVERIFY(saveMusicXml(score, QString(file) + "_no.xml"));
+      QVERIFY(saveCompareMusicXmlScore(score, QString(file) + "_no.xml", DIR + file + "_no_ref.xml"));
       preferences.setCustomPreference<MusicxmlExportBreaks>(PREF_EXPORT_MUSICXML_EXPORTBREAKS, MusicxmlExportBreaks::MANUAL);
-      QVERIFY(saveMusicXml(score, QString(file) + ".xml"));
-      QVERIFY(saveCompareMusicXmlScore(score, QString(file) + ".xml", DIR + file + "_manual_ref.xml"));
+      QVERIFY(saveMusicXml(score, QString(file) + "_manual.xml"));
+      QVERIFY(saveCompareMusicXmlScore(score, QString(file) + "_manual.xml", DIR + file + "_manual_ref.xml"));
       preferences.setCustomPreference<MusicxmlExportBreaks>(PREF_EXPORT_MUSICXML_EXPORTBREAKS, MusicxmlExportBreaks::ALL);
-      QVERIFY(saveMusicXml(score, QString(file) + ".xml"));
-      QVERIFY(saveCompareMusicXmlScore(score, QString(file) + ".xml", DIR + file + "_all_ref.xml"));
+      QVERIFY(saveMusicXml(score, QString(file) + "_all.xml"));
+      QVERIFY(saveCompareMusicXmlScore(score, QString(file) + "_all.xml", DIR + file + "_all_ref.xml"));
       delete score;
       }
 
